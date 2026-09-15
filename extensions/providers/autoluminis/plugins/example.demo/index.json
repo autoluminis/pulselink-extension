@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "example.demo",
+  "packageKind": "extension",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "releasePath": "extensions/providers/autoluminis/plugins/example.demo/1.0.0/release.json",
+      "archiveSha256": "7c18aae64e294bb2b0308c7ef13881ccdc7180c4ec5f3b44dac00c8ce28d6295"
+    }
+  ]
+}

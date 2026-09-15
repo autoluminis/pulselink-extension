@@ -17,7 +17,10 @@ function Write-Utf8Json([string] $Path, $Value) {
 }
 function Get-Sha256([string] $Path) { (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }
 function Assert([bool] $Condition, [string] $Message) { if (-not $Condition) { throw $Message } }
-function Assert-Id([string] $Value, [string] $Name) { Assert ($Value -match '^[a-z][a-z0-9-]{2,63}$') "$Name 无效。" }
+function Assert-Id([string] $Value, [string] $Name, [switch] $PluginId) {
+    $pattern = if ($PluginId) { '^[a-z][a-z0-9.-]{2,63}$' } else { '^[a-z][a-z0-9-]{2,63}$' }
+    Assert ($Value -match $pattern) "$Name 无效。"
+}
 function Assert-Version([string] $Value, [string] $Name) { Assert ($Value -match '^\d+\.\d+\.\d+$') "$Name 必须是三段数字版本。" }
 function Get-ArchiveManifest([string] $ArchivePath) {
     $archive = [IO.Compression.ZipFile]::OpenRead($ArchivePath)
@@ -64,7 +67,7 @@ function Sign-Index([string] $IndexPath) {
 }
 function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKind) {
     $providerRows = @()
-    Get-ChildItem -LiteralPath $KindRoot -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    Get-ChildItem -LiteralPath "$KindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
         $provider = $_
         $pluginRows = @()
         Get-ChildItem -LiteralPath "$($provider.FullName)/plugins" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
@@ -91,12 +94,20 @@ $root = [IO.Path]::GetFullPath($RepositoryRoot)
 $incoming = [IO.Path]::GetFullPath($IncomingDirectory, $root)
 $zips = @(Get-ChildItem -LiteralPath $incoming -Filter '*.zip' -File)
 $releases = @(Get-ChildItem -LiteralPath $incoming -Filter '*.release.json' -File)
-if ($zips.Count -eq 0 -and $AllowEmpty) { exit 0 }
+if ($zips.Count -eq 0 -and $AllowEmpty) {
+    Assert $Publish '空发布仅允许用于重建索引。'
+    Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_PRIVATE_KEY_PEM)) '重建索引必须配置 PULSELINK_CATALOG_PRIVATE_KEY_PEM。'
+    foreach ($kind in @(@{ Root = 'extensions'; PackageKind = 'extension' }, @{ Root = 'notifications'; PackageKind = 'notification-plugin' })) {
+        $kindRoot = "$root/$($kind.Root)"
+        if (Test-Path -LiteralPath $kindRoot) { Rebuild-Indexes $root $kindRoot $kind.PackageKind }
+    }
+    exit 0
+}
 Assert ($zips.Count -eq 1 -and $releases.Count -eq 1) '一次发布只能在 incoming 中包含一个 ZIP 与一个 .release.json。'
 $zip = $zips[0]; $releasePath = $releases[0]; $release = Read-Json $releasePath
 Assert ($release.schemaVersion -eq 1) 'release.json schemaVersion 必须为 1。'
 Assert ($release.packageKind -in @('extension','notification-plugin')) 'release.json packageKind 无效。'
-Assert-Id ([string]$release.pluginId) 'release.json pluginId'; Assert-Version ([string]$release.version) 'release.json version'
+Assert-Id ([string]$release.pluginId) 'release.json pluginId' -PluginId; Assert-Version ([string]$release.version) 'release.json version'
 Assert ($release.package.fileName -eq $zip.Name) 'release.json package.fileName 与 ZIP 文件名不一致。'
 Assert ($release.package.sizeBytes -eq $zip.Length) 'release.json package.sizeBytes 与 ZIP 实际大小不一致。'
 Assert ($release.package.sha256 -eq (Get-Sha256 $zip.FullName)) 'release.json package.sha256 与 ZIP 原始字节不一致。'

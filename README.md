@@ -22,6 +22,6 @@ notifications/providers/{providerId}/plugins/{pluginId}/{version}/
 
 每个插件默认仅保留最新三个三段数字版本。发布第四个版本时，CI 会在同一事务中删除最旧版本目录并重建索引；删除仅作用于该插件的已发布版本目录。
 
-## 密钥与分支
+## 发布安全
 
-仓库维护者在 `providers/{providerId}.json` 登记发行者公钥标识；实际公钥由 CI 从受保护的 `PULSELINK_PROVIDER_KEYS_JSON` Secret 读取。目录索引由 `PULSELINK_CATALOG_PRIVATE_KEY_PEM` Secret 签名，私钥不会进入仓库。保护 `release` 分支，仅允许 GitHub Actions 的发布身份写入。
+发布包和商城目录均经过签名校验。私钥及发布授权配置由受保护的维护流程管理，不会提交到本仓库。

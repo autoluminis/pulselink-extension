@@ -67,7 +67,7 @@ function Sign-Index([string] $IndexPath) {
 }
 function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKind) {
     $providerRows = @()
-    Get-ChildItem -LiteralPath $KindRoot -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    Get-ChildItem -LiteralPath "$KindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
         $provider = $_
         $pluginRows = @()
         Get-ChildItem -LiteralPath "$($provider.FullName)/plugins" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
@@ -94,7 +94,15 @@ $root = [IO.Path]::GetFullPath($RepositoryRoot)
 $incoming = [IO.Path]::GetFullPath($IncomingDirectory, $root)
 $zips = @(Get-ChildItem -LiteralPath $incoming -Filter '*.zip' -File)
 $releases = @(Get-ChildItem -LiteralPath $incoming -Filter '*.release.json' -File)
-if ($zips.Count -eq 0 -and $AllowEmpty) { exit 0 }
+if ($zips.Count -eq 0 -and $AllowEmpty) {
+    Assert $Publish '空发布仅允许用于重建索引。'
+    Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_PRIVATE_KEY_PEM)) '重建索引必须配置 PULSELINK_CATALOG_PRIVATE_KEY_PEM。'
+    foreach ($kind in @(@{ Root = 'extensions'; PackageKind = 'extension' }, @{ Root = 'notifications'; PackageKind = 'notification-plugin' })) {
+        $kindRoot = "$root/$($kind.Root)"
+        if (Test-Path -LiteralPath $kindRoot) { Rebuild-Indexes $root $kindRoot $kind.PackageKind }
+    }
+    exit 0
+}
 Assert ($zips.Count -eq 1 -and $releases.Count -eq 1) '一次发布只能在 incoming 中包含一个 ZIP 与一个 .release.json。'
 $zip = $zips[0]; $releasePath = $releases[0]; $release = Read-Json $releasePath
 Assert ($release.schemaVersion -eq 1) 'release.json schemaVersion 必须为 1。'

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "providerId": "autoluminis",
+  "packageKind": "extension",
+  "plugins": [
+    {
+      "pluginId": "example.demo",
+      "indexPath": "extensions/providers/autoluminis/plugins/example.demo/index.json",
+      "indexSha256": "f0cd8cee8b3cf698afee2c44e470d88ab39a0f670894b49129d457ecb76870d6"
+    }
+  ]
+}

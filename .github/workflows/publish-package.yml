@@ -6,9 +6,10 @@ on:
       - 'incoming/**'
       - 'providers/**'
       - 'scripts/**'
+      - '.github/workflows/**'
   push:
     branches: [release]
-    paths: ['incoming/**']
+    paths: ['incoming/**', '.github/workflows/**']
 
 permissions:
   contents: write

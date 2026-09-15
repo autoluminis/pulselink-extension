@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "extension",
+  "generatedAt": "2026-09-15T03:28:18.5049722+00:00",
+  "providers": [
+    {
+      "providerId": "providers",
+      "indexPath": "extensions/providers/index.json",
+      "indexSha256": "521c77ff03cb7a793230ea68243157e30ed26197dc7f94a46854d364590ad45f"
+    }
+  ]
+}

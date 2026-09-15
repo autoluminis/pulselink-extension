@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "pulselink.wxpusher",
+  "packageKind": "notification-plugin",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "releasePath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.0/release.json",
+      "archiveSha256": "88e92ae46848528ac6dec07714d98f793741f9976113f0329449955702f3b37f"
+    }
+  ]
+}

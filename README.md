@@ -22,6 +22,17 @@ notifications/providers/{providerId}/plugins/{pluginId}/{version}/
 
 每个插件默认仅保留最新三个三段数字版本。发布第四个版本时，CI 会在同一事务中删除最旧版本目录并重建索引；删除仅作用于该插件的已发布版本目录。
 
+## 发布分支
+
+每次发布使用短期分支，且分支名必须与待发布 ZIP 内清单、`release.json` 和 `incoming/` 文件名中的插件 ID、版本一致：
+
+```text
+publish/notification-{pluginId}-{version}
+publish/extension-{pluginId}-{version}
+```
+
+每个发布分支只能包含一个插件的一个版本；身份或版本不一致时，CI 拒绝发布。发布分支合并后应删除。
+
 ## 发布安全
 
 发布包和商城目录均经过签名校验。私钥及发布授权配置由受保护的维护流程管理，不会提交到本仓库。

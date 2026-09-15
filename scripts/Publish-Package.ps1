@@ -120,6 +120,8 @@ $archive = Get-ArchiveManifest $zip.FullName; Assert ($archive.Kind -eq $release
 $manifestId = if ($archive.Kind -eq 'extension') { [string]$archive.Manifest.id } else { [string]$archive.Manifest.pluginId }
 Assert ($manifestId -eq $release.pluginId -and $archive.Manifest.version -eq $release.version) 'ZIP 内清单与 release.json 的插件 ID 或版本不一致。'
 Assert ($archive.Manifest.manifestVersion -eq 2) '商城只接受 manifestVersion 2 的插件包。'
+$expectedBranch = if ($release.packageKind -eq 'extension') { "publish/extension-$manifestId-$($release.version)" } else { "publish/notification-$manifestId-$($release.version)" }
+if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_HEAD_REF)) { Assert ($env:GITHUB_HEAD_REF -eq $expectedBranch) "发布分支必须为 $expectedBranch。" }
 $targetKind = if ($release.packageKind -eq 'extension') { 'extensions' } else { 'notifications' }
 $target = "$root/$targetKind/providers/$providerId/plugins/$($release.pluginId)/$($release.version)"
 Assert (-not (Test-Path -LiteralPath $target)) '该插件版本已发布，已发布目录不可覆盖。'

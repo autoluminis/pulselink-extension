@@ -49,7 +49,7 @@ jobs:
         run: |
           git config user.name 'pulselink-marketplace[bot]'
           git config user.email 'pulselink-marketplace[bot]@users.noreply.github.com'
-          git add extensions notifications incoming
+          git add -A
           git diff --cached --quiet; if ($LASTEXITCODE -eq 0) { exit 0 }
           git commit -m '新增：发布已验证的插件包'
           git push

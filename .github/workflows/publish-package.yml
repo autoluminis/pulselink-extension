@@ -28,7 +28,7 @@ jobs:
         env:
           PULSELINK_PROVIDER_KEYS_JSON: ${{ secrets.PULSELINK_PROVIDER_KEYS_JSON }}
         run: >-
-          ./scripts/Publish-Package.ps1 -IncomingDirectory incoming -RepositoryRoot . -ValidateOnly
+          ./scripts/Publish-Package.ps1 -IncomingDirectory incoming -RepositoryRoot . -ValidateOnly -AllowEmpty
 
   publish:
     if: github.event_name == 'push'

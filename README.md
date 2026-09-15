@@ -20,6 +20,8 @@ notifications/providers/{providerId}/plugins/{pluginId}/{version}/
 
 并重建各插件 `index.json` 和分类 `index.json`。已发布版本不可修改；修复必须发布新版本。
 
+每个插件默认仅保留最新三个三段数字版本。发布第四个版本时，CI 会在同一事务中删除最旧版本目录并重建索引；删除仅作用于该插件的已发布版本目录。
+
 ## 密钥与分支
 
 仓库维护者在 `providers/{providerId}.json` 登记发行者公钥标识；实际公钥由 CI 从受保护的 `PULSELINK_PROVIDER_KEYS_JSON` Secret 读取。目录索引由 `PULSELINK_CATALOG_PRIVATE_KEY_PEM` Secret 签名，私钥不会进入仓库。保护 `release` 分支，仅允许 GitHub Actions 的发布身份写入。

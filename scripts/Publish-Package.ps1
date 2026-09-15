@@ -65,6 +65,13 @@ function Sign-Index([string] $IndexPath) {
         Write-Utf8Json "$IndexPath.sig" ([ordered]@{ schemaVersion = 1; algorithm = 'ECDSA-P256-SHA256'; keyId = $env:PULSELINK_CATALOG_KEY_ID; signature = [Convert]::ToBase64String($signature) })
     } finally { $key.Dispose() }
 }
+function Remove-ExpiredPluginVersions([string] $PluginRoot) {
+    $versions = @(Get-ChildItem -LiteralPath $PluginRoot -Directory | Sort-Object { [version]$_.Name } -Descending)
+    foreach ($expired in $versions | Select-Object -Skip 3) {
+        Remove-Item -LiteralPath $expired.FullName -Recurse -Force
+        Write-Host "已清理过期版本：$($expired.Name)"
+    }
+}
 function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKind) {
     $providerRows = @()
     Get-ChildItem -LiteralPath "$KindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
@@ -95,7 +102,7 @@ $incoming = [IO.Path]::GetFullPath($IncomingDirectory, $root)
 $zips = @(Get-ChildItem -LiteralPath $incoming -Filter '*.zip' -File)
 $releases = @(Get-ChildItem -LiteralPath $incoming -Filter '*.release.json' -File)
 if ($zips.Count -eq 0 -and $AllowEmpty) {
-    Assert $Publish '空发布仅允许用于重建索引。'
+    if ($ValidateOnly) { exit 0 }
     Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_PRIVATE_KEY_PEM)) '重建索引必须配置 PULSELINK_CATALOG_PRIVATE_KEY_PEM。'
     foreach ($kind in @(@{ Root = 'extensions'; PackageKind = 'extension' }, @{ Root = 'notifications'; PackageKind = 'notification-plugin' })) {
         $kindRoot = "$root/$($kind.Root)"
@@ -129,5 +136,6 @@ New-Item -ItemType Directory -Force -Path $target | Out-Null
 Copy-Item -LiteralPath $zip.FullName -Destination "$target/package.zip"
 Copy-Item -LiteralPath $releasePath -Destination "$target/release.json"
 Remove-Item -LiteralPath $zip.FullName, $releasePath
+Remove-ExpiredPluginVersions "$root/$targetKind/providers/$providerId/plugins/$($release.pluginId)"
 Rebuild-Indexes $root "$root/$targetKind" $release.packageKind
 Write-Host "已发布：$($release.pluginId) $($release.version)"

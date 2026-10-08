@@ -2,11 +2,14 @@
   "schemaVersion": 1,
   "providerId": "autoluminis",
   "packageKind": "notification-plugin",
+  "publisherKeyIds": [
+    "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C"
+  ],
   "plugins": [
     {
       "pluginId": "pulselink.wxpusher",
       "indexPath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/index.json",
-      "indexSha256": "aa5ebf90c035c9a841ce31359d99d0f779ad334d409db82b546c8d9cd8c422bd"
+      "indexSha256": "5a965b45a0877dc5e7b88bebf4ef3231f0ada14c45f5c626af93b055acf42bcf"
     }
   ]
 }

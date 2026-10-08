@@ -1,12 +1,55 @@
 {
   "schemaVersion": 1,
-  "pluginId": "pulselink.wxpusher",
   "packageKind": "notification-plugin",
+  "providerId": "autoluminis",
+  "providerName": "Autoluminis",
+  "pluginId": "pulselink.wxpusher",
+  "name": "WxPusher 通知",
+  "description": "通过 WxPusher 向已配置的接收者发送 PulseLink 报警和通知。",
   "versions": [
     {
       "version": "1.0.1",
-      "releasePath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1/release.json",
-      "archiveSha256": "41e59c59e93f714791707cdcf950d1f3f05bf36d552926b1cdc7a1488dd02467"
+      "releasedAt": "2026-10-08T05:56:53.5003226+00:00",
+      "releaseNotes": "",
+      "isPrerelease": false,
+      "hostCompatibility": {
+        "minimumVersion": "26.09.14.002",
+        "maximumVersionExclusive": null
+      },
+      "package": {
+        "path": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1/package.zip",
+        "archiveSha256": "41e59c59e93f714791707cdcf950d1f3f05bf36d552926b1cdc7a1488dd02467",
+        "sizeBytes": 51815,
+        "signatureKeyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
+        "signatureAlgorithm": "ECDSA-P256-SHA256",
+        "signature": "aDupMOzwFC0FEyWuIvDA/sxMXngbQiFerLxxcZylwLRWJTlVBwTIOI8ifQs7OKeDxSWqXIstxoAJHHsaCOD9dQ=="
+      }
     }
-  ]
+  ],
+  "summary": "通过 WxPusher 发送 PulseLink 报警和通知。",
+  "developers": [
+    {
+      "id": "autoluminis",
+      "displayName": "Autoluminis",
+      "url": "https://github.com/autoluminis"
+    }
+  ],
+  "tags": [
+    "notification",
+    "wechat",
+    "wxpusher"
+  ],
+  "sourceUrl": "https://github.com/autoluminis/PulseLink",
+  "documentationUrl": "https://github.com/autoluminis/PulseLink/blob/master/samples/PulseLink.NotificationPlugins.WxPusher/README.md",
+  "supportUrl": "https://github.com/autoluminis/PulseLink/issues",
+  "issueTrackerUrl": "https://github.com/autoluminis/PulseLink/issues",
+  "license": "MIT",
+  "maintainers": [
+    {
+      "id": "autoluminis",
+      "displayName": "Autoluminis",
+      "url": "https://github.com/autoluminis"
+    }
+  ],
+  "screenshots": []
 }

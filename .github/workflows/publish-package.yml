@@ -8,11 +8,12 @@ on:
       - 'extensions/**'
       - 'notifications/**'
       - 'scripts/**'
+      - 'tests/**'
       - '.github/workflows/**'
   push:
     branches: [release]
     # 清理已发布测试版本后也必须重建签名索引；机器人索引提交由 publish 条件排除，避免循环。
-    paths: ['incoming/**', 'providers/**', 'extensions/**', 'notifications/**', '.github/workflows/**']
+    paths: ['incoming/**', 'providers/**', 'extensions/**', 'notifications/**', 'scripts/**', '.github/workflows/**']
 
 permissions:
   contents: write

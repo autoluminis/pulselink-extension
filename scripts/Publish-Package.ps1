@@ -62,7 +62,12 @@ function Sign-Index([string] $IndexPath) {
     Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_KEY_ID)) '缺少 PULSELINK_CATALOG_KEY_ID。'
     $key = [Security.Cryptography.ECDsa]::Create()
     try {
-        $key.ImportFromPem($pem)
+        if ($pem.Contains('-----BEGIN ENCRYPTED PRIVATE KEY-----')) {
+            Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD)) '加密目录私钥必须配置 PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD。'
+            $key.ImportFromEncryptedPem($pem, $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD)
+        } else {
+            $key.ImportFromPem($pem)
+        }
         $signature = $key.SignData([IO.File]::ReadAllBytes($IndexPath), [Security.Cryptography.HashAlgorithmName]::SHA256, [Security.Cryptography.DSASignatureFormat]::IeeeP1363FixedFieldConcatenation)
         Write-Utf8Json "$IndexPath.sig" ([ordered]@{ schemaVersion = 1; algorithm = 'ECDSA-P256-SHA256'; keyId = $env:PULSELINK_CATALOG_KEY_ID; signature = [Convert]::ToBase64String($signature) })
     } finally { $key.Dispose() }

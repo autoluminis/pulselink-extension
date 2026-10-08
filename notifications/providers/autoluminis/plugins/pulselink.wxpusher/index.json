@@ -7,6 +7,11 @@
       "version": "1.0.0",
       "releasePath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.0/release.json",
       "archiveSha256": "88e92ae46848528ac6dec07714d98f793741f9976113f0329449955702f3b37f"
+    },
+    {
+      "version": "1.0.1",
+      "releasePath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1/release.json",
+      "archiveSha256": "41e59c59e93f714791707cdcf950d1f3f05bf36d552926b1cdc7a1488dd02467"
     }
   ]
 }

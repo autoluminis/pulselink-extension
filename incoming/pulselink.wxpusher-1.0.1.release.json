@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "notification-plugin",
+  "pluginId": "pulselink.wxpusher",
+  "name": "WxPusher \u901A\u77E5",
+  "description": "\u901A\u8FC7 WxPusher \u5411\u5DF2\u914D\u7F6E\u7684\u63A5\u6536\u8005\u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+  "version": "1.0.1",
+  "releasedAt": "2026-10-08T05:56:53.5003226\u002B00:00",
+  "releaseNotes": "",
+  "isPrerelease": false,
+  "hostCompatibility": {
+    "minimumVersion": "26.09.14.002",
+    "maximumVersionExclusive": null
+  },
+  "manifest": {
+    "manifestVersion": 2,
+    "apiVersion": 2,
+    "entryAssembly": "PulseLink.NotificationPlugins.WxPusher.dll",
+    "entryType": "PulseLink.NotificationPlugins.WxPusher.WxPusherPlugin",
+    "hasCustomUi": false
+  },
+  "package": {
+    "fileName": "pulselink.wxpusher-1.0.1.plugin.zip",
+    "sizeBytes": 51815,
+    "sha256": "41e59c59e93f714791707cdcf950d1f3f05bf36d552926b1cdc7a1488dd02467",
+    "signatureKeyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
+    "signatureAlgorithm": "ECDSA-P256-SHA256",
+    "signature": "aDupMOzwFC0FEyWuIvDA/sxMXngbQiFerLxxcZylwLRWJTlVBwTIOI8ifQs7OKeDxSWqXIstxoAJHHsaCOD9dQ=="
+  },
+  "marketplace": {
+    "schemaVersion": 1,
+    "providerId": "autoluminis",
+    "providerName": "Autoluminis",
+    "developers": [
+      {
+        "id": "autoluminis",
+        "displayName": "Autoluminis",
+        "url": "https://github.com/autoluminis"
+      }
+    ],
+    "summary": "\u901A\u8FC7 WxPusher \u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+    "maintainers": [
+      {
+        "id": "autoluminis",
+        "displayName": "Autoluminis",
+        "url": "https://github.com/autoluminis"
+      }
+    ],
+    "license": "MIT",
+    "sourceUrl": "https://github.com/autoluminis/PulseLink",
+    "documentationUrl": "https://github.com/autoluminis/PulseLink/blob/master/samples/PulseLink.NotificationPlugins.WxPusher/README.md",
+    "supportUrl": "https://github.com/autoluminis/PulseLink/issues",
+    "issueTrackerUrl": "https://github.com/autoluminis/PulseLink/issues",
+    "privacyPolicyUrl": null,
+    "iconPath": null,
+    "screenshots": [],
+    "tags": [
+      "notification",
+      "wechat",
+      "wxpusher"
+    ]
+  }
+}

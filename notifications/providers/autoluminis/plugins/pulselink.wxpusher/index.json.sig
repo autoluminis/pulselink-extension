@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "algorithm": "ECDSA-P256-SHA256",
-  "keyId": "pulselink-marketplace-test-20260915",
-  "signature": "HOZKB/mY9hgH3ovwR1WvOpDFtyObB0qeuLOslROIS9HB4wlX5FHgPSYmpXp6ZzKA0VBdvSbl9h110/t4Az1u/w=="
+  "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
+  "signature": "GdGrIy7khHMpbbQLmnL1hntqEpnPp8HcqGrwOsFl0mry3px/yna1MEXR+l2PE4Ot2kIa3U7IPqSE8ib5QjL54w=="
 }

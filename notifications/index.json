@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "packageKind": "notification-plugin",
-  "generatedAt": "2026-10-08T06:10:38.0150696+00:00",
+  "generatedAt": "2026-10-08T06:16:23.7349766+00:00",
   "providers": [
     {
       "providerId": "autoluminis",
       "indexPath": "notifications/providers/autoluminis/index.json",
-      "indexSha256": "8a9cfc9811f1dff0031bd0f9903efd6217921bd96ceebebb705a7810ebb35e78"
+      "indexSha256": "bc948b4490e68923a0a119b4358774740ef6575851e1348b8d5bd67aeee5ecf7"
     }
   ]
 }

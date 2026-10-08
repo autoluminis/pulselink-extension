@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "packageKind": "extension",
-  "generatedAt": "2026-10-08T06:16:23.7055842+00:00",
+  "generatedAt": "2026-10-08T06:28:22.2791231+00:00",
   "providers": [
     {
       "providerId": "autoluminis",
       "indexPath": "extensions/providers/autoluminis/index.json",
-      "indexSha256": "e8ebdaf1bdc25a7281c13da082c1b6fb9c37254d2f08cad2a0ca03d97f491e52"
+      "indexSha256": "30f01fdeb973e5ad7dfbb822e25e658d098716adca21ce5b136a428db68cfd20"
     }
   ]
 }

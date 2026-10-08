@@ -5,11 +5,14 @@ on:
     paths:
       - 'incoming/**'
       - 'providers/**'
+      - 'extensions/**'
+      - 'notifications/**'
       - 'scripts/**'
       - '.github/workflows/**'
   push:
     branches: [release]
-    paths: ['incoming/**', '.github/workflows/**']
+    # 清理已发布测试版本后也必须重建签名索引；机器人索引提交由 publish 条件排除，避免循环。
+    paths: ['incoming/**', 'providers/**', 'extensions/**', 'notifications/**', '.github/workflows/**']
 
 permissions:
   contents: write
@@ -35,6 +38,7 @@ jobs:
           PULSELINK_OFFICIAL_PUBLISHER_PUBLIC_KEY_PEM: ${{ secrets.PULSELINK_OFFICIAL_PUBLISHER_PUBLIC_KEY_PEM }}
         run: |
           ./tests/Test-PublisherKeys.ps1
+          ./tests/Test-CatalogCleanup.ps1
           ./scripts/Publish-Package.ps1 -IncomingDirectory incoming -RepositoryRoot . -ValidateOnly -AllowEmpty
 
   publish:

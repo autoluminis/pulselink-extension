@@ -16,7 +16,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: marketplace-publish-${{ github.ref }}
+  group: release-publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

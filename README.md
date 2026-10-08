@@ -1,4 +1,6 @@
-# PulseLink 插件商城发布仓库
+# PulseLink 插件商城与系统 OTA 发布仓库
+
+系统 OTA 使用草稿 GitHub Release 上传、签名校验和原始签名索引发布流程，详见 [系统 OTA 发布](docs/ota-publishing.md)。OTA 包不提交到 Git；下文 incoming/ 流程仅用于插件。
 
 此仓库只接收已打包的插件发布物，不保存插件源码，也不会在此编译、测试插件项目。
 

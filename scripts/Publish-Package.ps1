@@ -83,26 +83,89 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
     $providerRows = @()
     Get-ChildItem -LiteralPath "$KindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
         $provider = $_
+        $providerMetadata = Read-Json "$Root/providers/$($provider.Name).json"
+        Assert ($providerMetadata.providerId -eq $provider.Name) "发行方 $($provider.Name) 配置与目录不一致。"
+        $publisherKeyIds = @($providerMetadata.publisherKeyIds)
+        Assert ($publisherKeyIds.Count -gt 0 -and @($publisherKeyIds | Where-Object { [string]::IsNullOrWhiteSpace([string]$_) }).Count -eq 0) "发行方 $($provider.Name) 未声明发布密钥。"
+
         $pluginRows = @()
         Get-ChildItem -LiteralPath "$($provider.FullName)/plugins" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
             $plugin = $_
             $versions = @()
+            $releases = @()
             Get-ChildItem -LiteralPath $plugin.FullName -Directory | ForEach-Object {
-                $release = Read-Json "$($_.FullName)/release.json"
-                $versions += [ordered]@{ version = $release.version; releasePath = (($_.FullName.Substring($Root.Length + 1) -replace '\\','/') + '/release.json'); archiveSha256 = $release.package.sha256 }
+                $versionDirectory = $_
+                $release = Read-Json "$($versionDirectory.FullName)/release.json"
+                Assert ($release.schemaVersion -eq 1 -and $release.packageKind -eq $PackageKind -and $release.pluginId -eq $plugin.Name -and $release.version -eq $versionDirectory.Name) "插件 $($plugin.Name) 的发布描述与目录不一致。"
+                Assert ($release.marketplace.providerId -eq $provider.Name) "插件 $($plugin.Name) 的发行方不匹配。"
+                Assert (-not [string]::IsNullOrWhiteSpace([string]$release.name) -and -not [string]::IsNullOrWhiteSpace([string]$release.marketplace.providerName)) "插件 $($plugin.Name) 缺少商城展示信息。"
+                Assert (-not [string]::IsNullOrWhiteSpace([string]$release.hostCompatibility.minimumVersion)) "插件 $($plugin.Name) 缺少宿主兼容版本。"
+                Assert ($release.package.sizeBytes -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$release.package.sha256)) "插件 $($plugin.Name) 缺少包摘要或大小。"
+                foreach ($field in @('signatureKeyId', 'signatureAlgorithm', 'signature')) {
+                    Assert (-not [string]::IsNullOrWhiteSpace([string]$release.package[$field])) "插件 $($plugin.Name) 缺少包签名字段 $field。"
+                }
+                Assert ($publisherKeyIds -contains $release.package.signatureKeyId) "插件 $($plugin.Name) 的包签名密钥未获发行方授权。"
+                $archivePath = "$($versionDirectory.FullName)/package.zip"
+                Assert (Test-Path -LiteralPath $archivePath -PathType Leaf) "插件 $($plugin.Name) 缺少 package.zip。"
+                Assert ((Get-Item -LiteralPath $archivePath).Length -eq $release.package.sizeBytes) "插件 $($plugin.Name) 的包大小不匹配。"
+                Assert ((Get-Sha256 $archivePath) -eq $release.package.sha256) "插件 $($plugin.Name) 的包摘要不匹配。"
+                $archiveRelativePath = ($archivePath.Substring($Root.Length + 1) -replace '\\','/')
+                $versions += [ordered]@{
+                    version = $release.version
+                    releasedAt = $release.releasedAt
+                    releaseNotes = $release.releaseNotes
+                    isPrerelease = [bool]$release.isPrerelease
+                    hostCompatibility = $release.hostCompatibility
+                    package = [ordered]@{
+                        path = $archiveRelativePath
+                        archiveSha256 = $release.package.sha256
+                        sizeBytes = $release.package.sizeBytes
+                        signatureKeyId = $release.package.signatureKeyId
+                        signatureAlgorithm = $release.package.signatureAlgorithm
+                        signature = $release.package.signature
+                    }
+                }
+                $releases += $release
             }
-            $pluginIndex = [ordered]@{ schemaVersion = 1; pluginId = $plugin.Name; packageKind = $PackageKind; versions = @($versions | Sort-Object version) }
+            Assert ($versions.Count -gt 0) "插件 $($plugin.Name) 没有已发布版本。"
+            $latestRelease = @($releases | Sort-Object { [version]$_.version } -Descending)[0]
+            $metadata = $latestRelease.marketplace
+            $pluginIndex = [ordered]@{
+                schemaVersion = 1
+                packageKind = $PackageKind
+                providerId = $provider.Name
+                providerName = $metadata.providerName
+                pluginId = $plugin.Name
+                name = $latestRelease.name
+                description = $latestRelease.description
+                versions = @($versions | Sort-Object { [version]$_.version } -Descending)
+            }
+            foreach ($field in @('summary', 'developers', 'tags', 'iconPath', 'sourceUrl', 'documentationUrl', 'supportUrl', 'issueTrackerUrl', 'privacyPolicyUrl', 'license', 'maintainers', 'screenshots')) {
+                if ($null -ne $metadata[$field]) { $pluginIndex[$field] = $metadata[$field] }
+            }
             $pluginPath = "$($plugin.FullName)/index.json"; Write-Utf8Json $pluginPath $pluginIndex; Sign-Index $pluginPath
             $pluginRows += [ordered]@{ pluginId = $plugin.Name; indexPath = ($pluginPath.Substring($Root.Length + 1) -replace '\\','/'); indexSha256 = Get-Sha256 $pluginPath }
         }
-        $providerIndex = [ordered]@{ schemaVersion = 1; providerId = $provider.Name; packageKind = $PackageKind; plugins = @($pluginRows | Sort-Object pluginId) }
+        $providerIndex = [ordered]@{
+            schemaVersion = 1
+            providerId = $provider.Name
+            packageKind = $PackageKind
+            publisherKeyIds = @($publisherKeyIds)
+            plugins = @($pluginRows | Sort-Object pluginId)
+        }
         $providerPath = "$($provider.FullName)/index.json"; Write-Utf8Json $providerPath $providerIndex; Sign-Index $providerPath
         $providerRows += [ordered]@{ providerId = $provider.Name; indexPath = ($providerPath.Substring($Root.Length + 1) -replace '\\','/'); indexSha256 = Get-Sha256 $providerPath }
     }
-    $category = [ordered]@{ schemaVersion = 1; packageKind = $PackageKind; generatedAt = [DateTimeOffset]::UtcNow.ToString('O'); providers = @($providerRows | Sort-Object providerId) }
+    $catalogId = if ($PackageKind -eq 'notification-plugin') { 'notifications' } else { 'extensions' }
+    $category = [ordered]@{
+        schemaVersion = 1
+        catalogId = $catalogId
+        packageKind = $PackageKind
+        generatedAt = [DateTimeOffset]::UtcNow.ToString('O')
+        providers = @($providerRows | Sort-Object providerId)
+    }
     $path = "$KindRoot/index.json"; Write-Utf8Json $path $category; Sign-Index $path
 }
-
 Assert ($ValidateOnly -xor $Publish) '必须二选一指定 -ValidateOnly 或 -Publish。'
 $root = [IO.Path]::GetFullPath($RepositoryRoot)
 $incoming = [IO.Path]::GetFullPath($IncomingDirectory, $root)

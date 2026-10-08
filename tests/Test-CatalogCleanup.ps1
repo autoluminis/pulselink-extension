@@ -26,6 +26,7 @@ try {
     $indexFiles = @(Get-ChildItem -LiteralPath $temporaryRoot -Filter index.json -File -Recurse)
     Assert ($indexFiles.Count -eq 5) '两个分类、两个发行方及一个正式插件的索引应完整生成。'
     foreach ($indexFile in $indexFiles) {
+        Assert (-not ([IO.File]::ReadAllBytes($indexFile.FullName) -contains 13)) '发布索引必须使用 LF 换行，避免 Git 规范化后摘要与签名失效。'
         $signature = Get-Content "$($indexFile.FullName).sig" -Raw | ConvertFrom-Json -AsHashtable
         Assert ($signature.keyId -eq 'cleanup-test-key') '目录必须使用当前签名密钥。'
         $verified = $key.VerifyData([IO.File]::ReadAllBytes($indexFile.FullName), [Convert]::FromBase64String($signature.signature), [Security.Cryptography.HashAlgorithmName]::SHA256, [Security.Cryptography.DSASignatureFormat]::IeeeP1363FixedFieldConcatenation)

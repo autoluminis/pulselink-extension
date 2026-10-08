@@ -13,7 +13,8 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 function Read-Json([string] $Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable }
 function Write-Utf8Json([string] $Path, $Value) {
-    $json = $Value | ConvertTo-Json -Depth 20
+    # 在计算摘要和签名前固定为 LF，确保 Git 入库后的字节不变。
+    $json = ($Value | ConvertTo-Json -Depth 20).Replace("`r`n", "`n").Replace("`r", "`n")
     [IO.File]::WriteAllText($Path, $json + "`n", [Text.UTF8Encoding]::new($false))
 }
 function Get-Sha256([string] $Path) { (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }

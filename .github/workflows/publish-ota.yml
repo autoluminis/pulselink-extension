@@ -1,0 +1,69 @@
+name: Validate and publish system OTA
+
+on:
+  pull_request:
+    paths:
+      - 'tools/OtaPublisher/**'
+      - 'tests/OtaPublisher.Tests/**'
+      - 'tests/Test-OtaPublicationWorkflow.ps1'
+      - 'scripts/Publish-Ota.ps1'
+      - '.github/workflows/publish-ota.yml'
+  push:
+    branches: [release]
+    paths:
+      - 'tools/OtaPublisher/**'
+      - 'tests/OtaPublisher.Tests/**'
+      - 'tests/Test-OtaPublicationWorkflow.ps1'
+      - 'scripts/Publish-Ota.ps1'
+      - '.github/workflows/publish-ota.yml'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: '包含已签名 OTA 包和 latest.release.json 的草稿 Release 标签（ota-stable-win-x64-版本）'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# 与插件发布共用锁，避免两个流程同时提交 release 分支。
+concurrency:
+  group: release-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: OTA publisher regression
+        shell: pwsh
+        run: |
+          dotnet run --project tests/OtaPublisher.Tests --configuration Release
+          if ($LASTEXITCODE -ne 0) { throw 'OTA 发布回归失败。' }
+          pwsh -NoProfile -File tests/Test-OtaPublicationWorkflow.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'OTA 发布编排回归失败。' }
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release'
+    needs: test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify assets, publish Release and advance signed index
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OTA_RELEASE_TAG: ${{ inputs.release_tag }}
+          OTA_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/Publish-Ota.ps1 -ReleaseTag $env:OTA_RELEASE_TAG -Repository $env:OTA_REPOSITORY -RepositoryRoot .

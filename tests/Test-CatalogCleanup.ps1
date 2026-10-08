@@ -7,6 +7,7 @@ $temporaryParent = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 if (-not $temporaryRoot.StartsWith($temporaryParent, [StringComparison]::OrdinalIgnoreCase)) { throw '测试目录不在临时目录内。' }
 $key = [Security.Cryptography.ECDsa]::Create([Security.Cryptography.ECCurve+NamedCurves]::nistP256)
 $originalPrivateKey = $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM
+$originalPassword = $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD
 $originalKeyId = $env:PULSELINK_CATALOG_KEY_ID
 function Assert([bool] $Condition, [string] $Message) { if (-not $Condition) { throw $Message } }
 try {
@@ -19,6 +20,12 @@ try {
     $env:PULSELINK_CATALOG_KEY_ID = 'cleanup-test-key'
     & pwsh -NoProfile -File $publisher -IncomingDirectory incoming -RepositoryRoot $temporaryRoot -Publish -AllowEmpty
     Assert ($LASTEXITCODE -eq 0) '目录重建失败。'
+    # 使用临时密码加密临时密钥，验证与正式加密私钥相同的发布路径。
+    $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD = [Guid]::NewGuid().ToString('N')
+    $parameters = [Security.Cryptography.PbeParameters]::new([Security.Cryptography.PbeEncryptionAlgorithm]::Aes256Cbc, [Security.Cryptography.HashAlgorithmName]::SHA256, 10000)
+    $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM = $key.ExportEncryptedPkcs8PrivateKeyPem($env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD, $parameters)
+    & pwsh -NoProfile -File $publisher -IncomingDirectory incoming -RepositoryRoot $temporaryRoot -Publish -AllowEmpty
+    Assert ($LASTEXITCODE -eq 0) '加密私钥目录重建失败。'
     $extension = Get-Content "$temporaryRoot/extensions/providers/autoluminis/index.json" -Raw | ConvertFrom-Json -AsHashtable
     Assert ($extension.plugins.Count -eq 0) '已移除的测试扩展不能继续出现在提供方索引。'
     $notification = Get-Content "$temporaryRoot/notifications/providers/autoluminis/plugins/pulselink.wxpusher/index.json" -Raw | ConvertFrom-Json -AsHashtable
@@ -43,6 +50,7 @@ try {
     Write-Host '清理目录回归通过：空扩展目录、正式版本保留、5 份索引签名和引用摘要一致。'
 } finally {
     $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM = $originalPrivateKey
+    $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD = $originalPassword
     $env:PULSELINK_CATALOG_KEY_ID = $originalKeyId
     $key.Dispose()
     if (Test-Path -LiteralPath $temporaryRoot) { Remove-Item -LiteralPath $temporaryRoot -Recurse -Force }

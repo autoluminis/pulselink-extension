@@ -37,4 +37,6 @@ publish/extension-{pluginId}-{version}
 
 ## 发布安全
 
+官方插件验签公钥通过 Actions Secret `PULSELINK_OFFICIAL_PUBLISHER_PUBLIC_KEY_PEM` 配置，当前 KeyId 为 `PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C`。工作流将该公钥合并到既有 `PULSELINK_PROVIDER_KEYS_JSON` 集合，只替换同 KeyId 条目，保留其他发行方密钥；发行方配置中的 `publisherKeyIds` 授权检查保持开启。此配置只保存公钥，不保存本地打包私钥，不改变 OTA 内置信任根或商城目录签名私钥。
+
 发布包和商城目录均经过签名校验。私钥及发布授权配置由受保护的维护流程管理，不会提交到本仓库。

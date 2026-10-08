@@ -9,6 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+. "$PSScriptRoot/Publisher-Keys.ps1"
 
 function Read-Json([string] $Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable }
 function Write-Utf8Json([string] $Path, $Value) {
@@ -120,7 +121,7 @@ Assert ($release.package.sizeBytes -eq $zip.Length) 'release.json package.sizeBy
 Assert ($release.package.sha256 -eq (Get-Sha256 $zip.FullName)) 'release.json package.sha256 与 ZIP 原始字节不一致。'
 $providerId = [string]$release.marketplace.providerId; Assert-Id $providerId 'marketplace.providerId'
 $provider = Read-Json "$root/providers/$providerId.json"; Assert ($provider.providerId -eq $providerId) '发行方配置不匹配。'
-$keys = if ($env:PULSELINK_PROVIDER_KEYS_JSON) { $env:PULSELINK_PROVIDER_KEYS_JSON | ConvertFrom-Json -AsHashtable } else { @{} }
+$keys = Get-PublisherKeys -LegacyKeysJson $env:PULSELINK_PROVIDER_KEYS_JSON -OfficialKeyId $env:PULSELINK_OFFICIAL_PUBLISHER_KEY_ID -OfficialPublicKeyPem $env:PULSELINK_OFFICIAL_PUBLISHER_PUBLIC_KEY_PEM
 Assert ($provider.publisherKeyIds -contains $release.package.signatureKeyId) '该密钥未获发行方授权。'
 Test-ArchiveSignature $zip.FullName $release.package $keys
 $archive = Get-ArchiveManifest $zip.FullName; Assert ($archive.Kind -eq $release.packageKind) 'ZIP 类型与 release.json 不一致。'

@@ -7,6 +7,11 @@
   ],
   "plugins": [
     {
+      "pluginId": "pulselink.dtu",
+      "indexPath": "notifications/providers/autoluminis/plugins/pulselink.dtu/index.json",
+      "indexSha256": "4f8a6f15ef21a359f7d64144be271e73fac64ca085c2de4e9229f11a1537b2d6"
+    },
+    {
       "pluginId": "pulselink.wxpusher",
       "indexPath": "notifications/providers/autoluminis/plugins/pulselink.wxpusher/index.json",
       "indexSha256": "6eea5b1e7ed9e87f430be5cd376c23fa02042801b8088df0d7eb6e7ff76afb16"

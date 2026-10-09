@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "notification-plugin",
+  "providerId": "autoluminis",
+  "providerName": "Autoluminis",
+  "pluginId": "pulselink.dtu",
+  "name": "DTU 通知",
+  "description": "通过 DTU 网关发送 PulseLink 报警和通知。",
+  "versions": [
+    {
+      "version": "1.0.1",
+      "releasedAt": "2026-10-09T02:33:47.7244654+00:00",
+      "releaseNotes": "",
+      "isPrerelease": false,
+      "hostCompatibility": {
+        "minimumVersion": "26.09.14.002",
+        "maximumVersionExclusive": null
+      },
+      "package": {
+        "path": "notifications/providers/autoluminis/plugins/pulselink.dtu/1.0.1/package.zip",
+        "archiveSha256": "800c00fc3a45fa9b07f0c5ab9689b533ab2e930b1c8f6631c4f6791b43d6647c",
+        "sizeBytes": 89108,
+        "signatureKeyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
+        "signatureAlgorithm": "ECDSA-P256-SHA256",
+        "signature": "7ABCUKsysseyLzBotSiEIOy+le3p9KsuT6Gq9zA8waRwJi/qSRYEtbBfpWgTAAcp2Fppd0aBzcQdsXjfuatT/g=="
+      }
+    }
+  ],
+  "summary": "通过 DTU 网关发送 PulseLink 报警和通知。",
+  "developers": [
+    {
+      "id": "autoluminis",
+      "displayName": "Autoluminis",
+      "url": "https://github.com/autoluminis"
+    }
+  ],
+  "tags": [
+    "notification",
+    "dtu"
+  ],
+  "sourceUrl": "https://github.com/autoluminis/PulseLink",
+  "documentationUrl": "https://github.com/autoluminis/PulseLink/blob/master/samples/PulseLink.NotificationPlugins.Dtu/README.md",
+  "supportUrl": "https://github.com/autoluminis/PulseLink/issues",
+  "issueTrackerUrl": "https://github.com/autoluminis/PulseLink/issues",
+  "license": "MIT",
+  "maintainers": [
+    {
+      "id": "autoluminis",
+      "displayName": "Autoluminis",
+      "url": "https://github.com/autoluminis"
+    }
+  ],
+  "screenshots": []
+}

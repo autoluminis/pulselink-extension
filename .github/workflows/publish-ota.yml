@@ -1,4 +1,5 @@
 name: Validate and publish system OTA
+run-name: 发布系统 OTA ${{ inputs.release_tag || github.event_name }}
 
 on:
   pull_request:
@@ -6,6 +7,7 @@ on:
       - 'tools/OtaPublisher/**'
       - 'tests/OtaPublisher.Tests/**'
       - 'tests/Test-OtaPublicationWorkflow.ps1'
+      - 'tests/Test-OtaPublicationGitRace.ps1'
       - 'scripts/Publish-Ota.ps1'
       - '.github/workflows/publish-ota.yml'
   push:
@@ -14,6 +16,7 @@ on:
       - 'tools/OtaPublisher/**'
       - 'tests/OtaPublisher.Tests/**'
       - 'tests/Test-OtaPublicationWorkflow.ps1'
+      - 'tests/Test-OtaPublicationGitRace.ps1'
       - 'scripts/Publish-Ota.ps1'
       - '.github/workflows/publish-ota.yml'
   workflow_dispatch:
@@ -46,6 +49,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'OTA 发布回归失败。' }
           pwsh -NoProfile -File tests/Test-OtaPublicationWorkflow.ps1
           if ($LASTEXITCODE -ne 0) { throw 'OTA 发布编排回归失败。' }
+          pwsh -NoProfile -File tests/Test-OtaPublicationGitRace.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'OTA Git 竞争回归失败。' }
 
   publish:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release'

@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "product": "PulseLink",
   "channel": "stable",
-  "version": "26.10.15.001",
+  "version": "26.10.15.003",
   "minimumVersion": "1.0.0",
   "runtimeIdentifier": "win-x64",
-  "packagePath": "ota/stable/win-x64/PulseLink-26.10.15.001-win-x64.ota.zip",
-  "packageSize": 56287221,
-  "packageSha256": "CF055E7B98F96C955A07712DD7D3F66AEB1DCD493BE8B46258E50F4BD02A5D75",
-  "publishedAt": "2026-10-15T06:20:07.9467813+00:00",
+  "packagePath": "ota/stable/win-x64/PulseLink-26.10.15.003-win-x64.ota.zip",
+  "packageSize": 56283650,
+  "packageSha256": "BCC6BE42A76CCBFC7854BCBC46DB94B111A38FE6138D8EC794B97C3ED0117619",
+  "publishedAt": "2026-10-15T12:29:47.0746591+00:00",
   "releaseNotes": null,
   "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
   "signatureAlgorithm": "ECDSA-P256-SHA256",
-  "signature": "Zbehivzr9EsFetoUln1sW1kzLPvYn1\u002BGvynX720QQduF72JnNs8KUQH/dcJUNi56zaXcFnO795azkyPsHQqrRQ=="
+  "signature": "EpQ504J0aPWXeEsPKsRt2XHHNWbTYjHaCggqrZCCKeizKThtkNASOdoKqOEI2L3ToWtWEj\u002B\u002BIBPHRtFJEefipQ=="
 }

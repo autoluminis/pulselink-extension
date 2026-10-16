@@ -20,6 +20,10 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base=`http://127.0.0.1:${server.address().port}/pulselink-extension`;
+  const publicReleases=structuredClone(release.releases);
+  const stableRelease=publicReleases.find(r=>r.tag_name==='ota-stable-win-x64-'+release.index.version);
+  assert(stableRelease);
+  stableRelease.assets.push({name:'PulseLink-Setup.exe',state:'uploaded',size:372566496,browser_download_url:`https://github.com/autoluminis/pulselink-extension/releases/download/${stableRelease.tag_name}/PulseLink-Setup.exe`});
   let browser;
   try{
     browser=await chromium.launch({headless:true,args:['--no-sandbox'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})});
@@ -27,7 +31,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     await context.addCookies([{name:'test_site_session',value:'authenticated',domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Lax'}]);
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let apiDown=false,indexDown=false,tamperCatalog=false;
-    await page.route('https://api.github.com/**',r=>r.fulfill({status:apiDown?403:200,contentType:'application/json',body:JSON.stringify(apiDown?{}:release.releases)}));
+    await page.route('https://api.github.com/**',r=>r.fulfill({status:apiDown?403:200,contentType:'application/json',body:JSON.stringify(apiDown?{}:publicReleases)}));
     await page.route('https://raw.githubusercontent.com/**',r=>{
       const path=r.request().url().split('/release/')[1];
       if(path.startsWith('ota/'))return r.fulfill({status:indexDown?503:200,contentType:'application/json',body:JSON.stringify(release.index)});
@@ -36,6 +40,8 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
       return r.fulfill({contentType:'application/json',body:data});
     });
     await page.goto(base+'/#home');
+    await page.waitForFunction(()=>document.getElementById('release-status').textContent.includes('已找到公开发行的安装程序'));
+    assert.match(await page.locator('#package-download').getAttribute('href'),/PulseLink-Setup\\.exe$/);
     await page.locator('.nav-links a[href="#connections"]').click();
     await page.waitForFunction(()=>document.documentElement.classList.contains('is-transitioning'));
     const positions=await page.evaluate(()=>new Promise(resolve=>{const points=[];const started=performance.now();function tick(){points.push(scrollY);if(performance.now()-started<1150)requestAnimationFrame(tick);else resolve(points);}requestAnimationFrame(tick);}));
@@ -45,9 +51,14 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     await page.waitForFunction(()=>document.querySelector('.deck-count').textContent==='03 / 07'&&!document.documentElement.classList.contains('is-transitioning'));
     const original=await page.locator('#notifications').innerText();assert(!/WxPusher|DTU/.test(original));
     await page.emulateMedia({reducedMotion:'reduce'});
-    for(const [width,height] of [[1920,900],[1440,900],[1366,768],[1024,768],[768,900],[390,844],[320,800]]){
+    for(const [width,height] of [[1920,900],[1440,900],[1366,768],[1024,768],[980,900],[820,900],[768,900],[390,844],[320,800]]){
       await page.setViewportSize({width,height});
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`no horizontal overflow at ${width}`);
+      const actionsFit=await page.evaluate(()=>[...document.querySelectorAll('.actions .button,.guide-actions .button,.package-actions .button,.package-tabs button,.release-tools a,.release-tools button,.nav-links a,.menu-toggle,.plugin-entry-actions button')]
+        .filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
+        .every(el=>{const rect=el.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+2;}));
+      assert(actionsFit,`action labels fit within viewport at ${width}`);
+      if(width>760&&width<=1020){assert(await page.locator('.menu-toggle').isVisible(),`responsive navigation available at ${width}`);await page.locator('.menu-toggle').click();assert(await page.locator('.nav-links a[href="#downloads"]').isVisible());await page.locator('.menu-toggle').click();}
       if(width>=1024){const sizes=await page.locator('.slide').evaluateAll(slides=>slides.map(s=>({height:s.getBoundingClientRect().height,available:innerHeight-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header'))})));assert(sizes.every(s=>s.height<=s.available+2),`full screens fit ${width}`);}
     }
     await page.setViewportSize({width:1440,height:900});
@@ -58,7 +69,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
       assert.deepEqual(await page.locator('#'+id+' .slide-inner').evaluate(el=>({transform:getComputedStyle(el).transform,animations:el.getAnimations({subtree:true}).filter(a=>a.animationName?.startsWith('chapter-')).length})),{transform:'none',animations:0},'cards stay stationary after navigation');
     }
     await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));
-    assert.match(await page.locator('#release-status').innerText(),/尚无/);
+    assert.match(await page.locator('#release-status').innerText(),/已找到公开发行的安装程序/);
     await page.locator('[data-package=ota]').click();
     assert.match(await page.locator('#package-download').getAttribute('href'),/\.ota\.zip$/);
     assert.match(await page.locator('#package-metadata').innerText(),new RegExp(release.index.version));

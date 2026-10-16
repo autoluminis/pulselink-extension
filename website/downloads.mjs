@@ -1,5 +1,4 @@
 import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex} from './release-core.mjs';
-const root = document.getElementById('downloads');
 const status = document.getElementById('release-status');
 const title = document.getElementById('package-title');
 const purpose = document.getElementById('package-purpose');
@@ -97,5 +96,5 @@ copy.addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(sha); copy.textContent = '已复制 ✓'; }
   catch { copy.textContent = '复制未成功'; }
 });
-const observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting) && !started) { load(); observer.disconnect(); } }, {rootMargin:'200px'});
-observer.observe(root);
+// Resolve both download types immediately, including when arriving via a deep link.
+load();

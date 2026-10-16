@@ -1,0 +1,6 @@
+{
+  "repository": "autoluminis/pulselink-extension",
+  "releaseBranch": "release",
+  "channel": "stable",
+  "runtimeIdentifier": "win-x64"
+}

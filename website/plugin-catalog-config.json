@@ -1,0 +1,12 @@
+{
+  "officialProviderIds": [
+    "autoluminis"
+  ],
+  "catalogPublicKeys": {
+    "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5zfuxSeIDY1/0Fks0f8S6HnoCJog\nyvqdTrV+H4tXmxzGvOe08Cfcyqk4AMXWl04FokWynHyUy9XheSXg4uWfKw==\n-----END PUBLIC KEY-----"
+  },
+  "documentationPaths": {
+    "pulselink.dtu": "guides/dtu.html",
+    "pulselink.wxpusher": "guides/wxpusher.html"
+  }
+}

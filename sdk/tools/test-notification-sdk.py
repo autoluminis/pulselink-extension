@@ -17,6 +17,7 @@ class SdkArchiveTests(unittest.TestCase):
         self.assertEqual(ZIP.with_suffix('.zip.sha256').read_text().split()[0], hashlib.sha256(ZIP.read_bytes()).hexdigest())
         with zipfile.ZipFile(ZIP) as archive:
             names = archive.namelist()
+            self.assertEqual(names, sorted(names), 'Archive order must use case-sensitive POSIX paths on every OS')
             for required in ['README.md', 'DEVELOPING.md', 'Directory.Build.props', 'examples/plugin.json', 'examples/marketplace.json', 'tests/Program.cs']:
                 self.assertIn('PulseLink-Notification-SDK/' + required, names)
             for name in names:

@@ -13,7 +13,7 @@ if actual != manifest['files']:
 output = root / 'website/assets/PulseLink-Notification-SDK-26.10.15.003.zip'
 (output.parent / 'PulseLink-Notification-Development-Guide.md').write_bytes((source / 'DEVELOPING.md').read_bytes().replace(b'\r\n', b'\n'))
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_STORED) as archive:
-    for path in sorted(source.rglob('*')):
+    for path in sorted(source.rglob('*'), key=lambda path: path.relative_to(source).as_posix()):
         if not path.is_file() or any(p in ('bin', 'obj') for p in path.relative_to(source).parts) or path.suffix not in ('.cs', '.csproj', '.props', '.md', '.json'):
             continue
         info = zipfile.ZipInfo('PulseLink-Notification-SDK/' + path.relative_to(source).as_posix(), (2026, 10, 16, 0, 0, 0))

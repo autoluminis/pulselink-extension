@@ -22,6 +22,14 @@ test('first installation and OTA are independent, and the stable index is author
   const setup = version => {const tag='v'+version;return {draft:false,prerelease:false,tag_name:tag,assets:[{name:'PulseLink-Setup.exe',state:'uploaded',size:100000,digest:'sha256:'+'A'.repeat(64),browser_download_url:`https://github.com/${config.repository}/releases/download/${tag}/PulseLink-Setup.exe`}]};};
   const candidates=[setup('26.10.16.002'), setup('26.10.16.010'), {...setup('26.10.17.001'),draft:true}];
   assert.equal(selectInstaller(publicStableReleases(candidates), config).version,'26.10.16.010');
+  // Real stable OTA releases can ship a complete installer as a separate asset.
+  const stableOta = releases.releases.find(r=>r.tag_name==='ota-stable-win-x64-'+releases.index.version);
+  assert(stableOta);
+  const installerUrl=`https://github.com/${config.repository}/releases/download/${stableOta.tag_name}/PulseLink-Setup.exe`;
+  const withInstaller={...stableOta,assets:[...stableOta.assets,{name:'PulseLink-Setup.exe',state:'uploaded',size:372566496,browser_download_url:installerUrl}]};
+  assert.equal(selectInstaller(publicStableReleases([withInstaller]),config).url,installerUrl);
+  const unpublished={...withInstaller,assets:withInstaller.assets.map(a=>a.name==='PulseLink-Setup.exe'?{...a,state:'starter'}:a)};
+  assert.equal(selectInstaller(publicStableReleases([unpublished]),config),null);
   const poison=setup('26.10.18.001');poison.assets[0].browser_download_url='https://untrusted.invalid/a.exe';
   assert.equal(selectInstaller([poison],config),null);
 });

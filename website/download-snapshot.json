@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "repository": "autoluminis/pulselink-extension",
+  "channel": "stable",
+  "runtimeIdentifier": "win-x64",
+  "generatedAt": "2026-10-16T12:28:09.330Z",
+  "releases": [
+    {
+      "draft": false,
+      "prerelease": false,
+      "tag_name": "ota-stable-win-x64-26.10.15.003",
+      "published_at": "2026-10-15T12:33:09Z",
+      "assets": [
+        {
+          "name": "PulseLink-26.10.15.003-win-x64.ota.zip",
+          "state": "uploaded",
+          "size": 56283650,
+          "digest": "sha256:bcc6be42a76ccbfc7854bcbc46db94b111a38fe6138d8ec794b97c3ed0117619",
+          "browser_download_url": "https://github.com/autoluminis/pulselink-extension/releases/download/ota-stable-win-x64-26.10.15.003/PulseLink-26.10.15.003-win-x64.ota.zip"
+        },
+        {
+          "name": "PulseLink-Setup.exe",
+          "state": "uploaded",
+          "size": 372566496,
+          "digest": "sha256:2a89bf9436bba84303f5d55a50069e39267a2ff79a59cc2f94ac48bdde874d5b",
+          "browser_download_url": "https://github.com/autoluminis/pulselink-extension/releases/download/ota-stable-win-x64-26.10.15.003/PulseLink-Setup.exe"
+        },
+        {
+          "name": "PulseLink-Setup.exe.sha256",
+          "state": "uploaded",
+          "size": 87,
+          "digest": "sha256:613eb5de3cb754867812b2b9e983b2129da79bbbe6afd58d40250d5316b84258",
+          "browser_download_url": "https://github.com/autoluminis/pulselink-extension/releases/download/ota-stable-win-x64-26.10.15.003/PulseLink-Setup.exe.sha256"
+        }
+      ]
+    }
+  ],
+  "index": {
+    "schemaVersion": 1,
+    "product": "PulseLink",
+    "channel": "stable",
+    "version": "26.10.15.003",
+    "minimumVersion": "1.0.0",
+    "runtimeIdentifier": "win-x64",
+    "packagePath": "ota/stable/win-x64/PulseLink-26.10.15.003-win-x64.ota.zip",
+    "packageSize": 56283650,
+    "packageSha256": "BCC6BE42A76CCBFC7854BCBC46DB94B111A38FE6138D8EC794B97C3ED0117619",
+    "publishedAt": "2026-10-15T12:29:47.0746591+00:00",
+    "releaseNotes": null,
+    "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
+    "signatureAlgorithm": "ECDSA-P256-SHA256",
+    "signature": "EpQ504J0aPWXeEsPKsRt2XHHNWbTYjHaCggqrZCCKeizKThtkNASOdoKqOEI2L3ToWtWEj++IBPHRtFJEefipQ=="
+  }
+}

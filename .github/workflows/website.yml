@@ -5,6 +5,7 @@ on:
     paths:
       - 'website/**'
       - 'website-tests/**'
+      - 'website-tools/**'
       - 'sdk/**'
       - '.github/workflows/website.yml'
   push:
@@ -12,9 +13,15 @@ on:
     paths:
       - 'website/**'
       - 'website-tests/**'
+      - 'website-tools/**'
+      - 'ota/**'
       - 'sdk/**'
       - '.github/workflows/website.yml'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Validate and publish system OTA']
+    branches: [release]
+    types: [completed]
 
 permissions:
   contents: read
@@ -25,6 +32,7 @@ concurrency:
 
 jobs:
   check:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,6 +90,15 @@ jobs:
           echo 'Website checks passed. Pages deployment was skipped: select GitHub Actions in Settings → Pages, confirm the github-pages environment permits the release branch, then run this workflow on release.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/configure-pages@v5
         if: steps.pages.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.pages.outputs.ready == 'true'
+        with:
+          node-version: '22'
+      - name: Refresh same-origin download snapshot
+        if: steps.pages.outputs.ready == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node website-tools/update-download-snapshot.mjs
       - uses: actions/upload-pages-artifact@v3
         if: steps.pages.outputs.ready == 'true'
         with:

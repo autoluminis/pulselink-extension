@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile, readdir} from 'node:fs/promises';
+import {readFile, readdir, mkdtemp, writeFile, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {join, relative, resolve} from 'node:path';
-import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex} from '../../website/release-core.mjs';
+import {join, relative, resolve, sep} from 'node:path';
+import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex, readDownloadSnapshot} from '../../website/release-core.mjs';
 import {readOfficialCatalog, catalogPath} from '../../website/plugin-catalog-core.mjs';
 const website = fileURLToPath(new URL('../../website/', import.meta.url));
 const releases = JSON.parse(await readFile(new URL('../fixtures/releases.json', import.meta.url)));
@@ -11,6 +13,40 @@ const catalog = JSON.parse(await readFile(new URL('../fixtures/catalog.json', im
 const config = validateConfig(JSON.parse(await readFile(join(website, 'release-config.json'))));
 const trust = JSON.parse(await readFile(join(website, 'plugin-catalog-config.json')));
 const readBytes = path => { assert(catalog[path]); return Uint8Array.from(Buffer.from(catalog[path], 'base64')); };
+
+test('same-origin download snapshot validates identity, timestamp and official asset URLs', async()=>{
+  const snapshot=JSON.parse(await readFile(join(website,'download-snapshot.json')));
+  const actual=readDownloadSnapshot(snapshot,config);
+  assert(actual.setup?.url.endsWith('/PulseLink-Setup.exe'));
+  assert(actual.ota?.url.endsWith('.ota.zip'));
+  assert.equal(actual.setup.cachedAt,snapshot.generatedAt);
+  for(const patch of [{repository:'other/repo'},{runtimeIdentifier:'win-arm64'},{channel:'preview'},{generatedAt:'invalid'},{generatedAt:'2999-01-01T00:00:00Z'},{schemaVersion:2}])assert.throws(()=>readDownloadSnapshot({...snapshot,...patch},config));
+  const poison=structuredClone(snapshot);
+  poison.releases.flatMap(r=>r.assets).find(a=>a.name==='PulseLink-Setup.exe').browser_download_url='https://untrusted.invalid/setup.exe';
+  assert.equal(readDownloadSnapshot(poison,config).setup,null);
+  const mismatch=structuredClone(snapshot);mismatch.index.packageSha256='0'.repeat(64);
+  assert.throws(()=>readDownloadSnapshot(mismatch,config));
+});
+
+test('snapshot publisher keeps only validated public download metadata',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'pulselink-download-snapshot-'));
+  try{
+    const snapshot=JSON.parse(await readFile(join(website,'download-snapshot.json')));
+    const input=structuredClone(snapshot.releases);
+    input.push({...input[0],draft:true,tag_name:'v99.1.1',body:'private draft text'});
+    input[0].body='not needed in public snapshot';
+    input[0].assets.push({name:'unrelated-file.txt',browser_download_url:'https://untrusted.invalid/file'});
+    await writeFile(join(dir,'releases.json'),JSON.stringify(input));
+    await writeFile(join(dir,'index.json'),JSON.stringify(snapshot.index));
+    const output=join(dir,'snapshot.json');
+    execFileSync(process.execPath,[fileURLToPath(new URL('../../website-tools/update-download-snapshot.mjs',import.meta.url)),join(dir,'releases.json'),join(dir,'index.json'),output]);
+    const text=await readFile(output,'utf8');
+    assert(!/private draft|not needed|unrelated-file/.test(text));
+    const result=readDownloadSnapshot(JSON.parse(text),config);
+    assert.equal(result.setup.url,readDownloadSnapshot(snapshot,config).setup.url);
+    assert.equal(result.ota.url,readDownloadSnapshot(snapshot,config).ota.url);
+  }finally{assert(resolve(dir).startsWith(resolve(tmpdir())+sep)&&dir.includes('pulselink-download-snapshot-'));await rm(dir,{recursive:true,force:true});}
+});
 
 test('every public HTML page has valid local assets, links and fragment destinations', async () => {
   async function pages(dir) {const result=[];for(const item of await readdir(dir,{withFileTypes:true})){const path=join(dir,item.name);if(item.isDirectory())result.push(...await pages(path));else if(path.endsWith('.html'))result.push(path);}return result;}

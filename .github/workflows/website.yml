@@ -46,9 +46,11 @@ jobs:
       - name: Verify SDK archive and build extracted example
         run: |
           python sdk/tools/package-notification-sdk.py
-          git diff --exit-code -- website/assets/PulseLink-Notification-SDK-26.10.15.003.zip website/assets/PulseLink-Notification-SDK-26.10.15.003.zip.sha256
+          python sdk/tools/test-notification-sdk.py
+          git diff --exit-code -- website/assets/PulseLink-Notification-SDK-26.10.15.003.zip website/assets/PulseLink-Notification-SDK-26.10.15.003.zip.sha256 website/assets/PulseLink-Notification-Development-Guide.md
           unzip -q website/assets/PulseLink-Notification-SDK-26.10.15.003.zip -d "$RUNNER_TEMP/notification-sdk"
           dotnet build "$RUNNER_TEMP/notification-sdk/PulseLink-Notification-SDK/examples/GenericWebhook.csproj" -c Release
+          dotnet run --project "$RUNNER_TEMP/notification-sdk/PulseLink-Notification-SDK/tests/GenericWebhook.Tests.csproj" -c Release
       - name: Check website and browser behavior
         run: npm test --prefix website-tests
 

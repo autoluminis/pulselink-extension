@@ -7,8 +7,10 @@ namespace PulseLink.NotificationPlugins.GenericWebhook;
 /// <summary>SDK 示例：将标准化通知负载发送到配置地址的广播渠道。</summary>
 public sealed class GenericWebhookChannel : INotificationChannel
 {
-    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private readonly HttpClient client;
     private static readonly JsonSerializerOptions ConfigurationJsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public GenericWebhookChannel(HttpClient client) => this.client = client ?? throw new ArgumentNullException(nameof(client));
 
     public string Key => "webhook";
     public string DisplayName => "Generic Webhook";
@@ -22,25 +24,27 @@ public sealed class GenericWebhookChannel : INotificationChannel
 
     public ValueTask<NotificationChannelValidationResult> ValidateConfigurationAsync(string configurationJson, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var configuration = JsonSerializer.Deserialize<WebhookConfiguration>(configurationJson, ConfigurationJsonOptions);
-            var isValid = configuration is not null && Uri.TryCreate(configuration.Url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
-            return ValueTask.FromResult(isValid
-                ? NotificationChannelValidationResult.Valid
-                : new NotificationChannelValidationResult(false, ["配置必须包含 http 或 https URL 字段。"]));
+            ParseConfiguration(configurationJson);
+            return ValueTask.FromResult(NotificationChannelValidationResult.Valid);
         }
-        catch (JsonException)
+        catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException)
         {
-            return ValueTask.FromResult(new NotificationChannelValidationResult(false, ["配置不是有效 JSON。"]));
+            return ValueTask.FromResult(new NotificationChannelValidationResult(false, ["配置必须是 JSON 对象，包含无账号密码和片段的绝对 HTTP(S) url。"]));
         }
     }
 
     public async ValueTask<NotificationDeliveryResult> SendAsync(NotificationDispatchMessage message, CancellationToken cancellationToken = default)
     {
-        var configuration = JsonSerializer.Deserialize<WebhookConfiguration>(message.ConfigurationJson, ConfigurationJsonOptions)
-            ?? throw new InvalidOperationException("Webhook 配置无效。");
-        using var response = await Client.PostAsJsonAsync(configuration.Url, new
+        cancellationToken.ThrowIfCancellationRequested();
+        var configuration = ParseConfiguration(message.ConfigurationJson);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        using var request = new HttpRequestMessage(HttpMethod.Post, configuration.Url);
+        request.Headers.Add("Idempotency-Key", message.DeliveryId);
+        request.Content = JsonContent.Create(new
         {
             message.DeliveryId,
             message.EventType,
@@ -48,9 +52,20 @@ public sealed class GenericWebhookChannel : INotificationChannel
             message.Subject,
             message.Body,
             message.Attributes
-        }, cancellationToken);
+        });
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
         response.EnsureSuccessStatusCode();
-        return NotificationDeliveryResult.Accepted(providerStatus: $"HTTP {(int)response.StatusCode}", responseSummary: response.ReasonPhrase);
+        return NotificationDeliveryResult.Accepted(providerStatus: $"HTTP {(int)response.StatusCode}");
+    }
+
+    private static WebhookConfiguration ParseConfiguration(string json)
+    {
+        var configuration = JsonSerializer.Deserialize<WebhookConfiguration>(json, ConfigurationJsonOptions);
+        if (configuration is null || !Uri.TryCreate(configuration.Url, UriKind.Absolute, out var uri)
+            || uri.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(uri.UserInfo)
+            || !string.IsNullOrEmpty(uri.Fragment))
+            throw new InvalidOperationException("Webhook 配置无效。");
+        return configuration;
     }
 
     private sealed class WebhookConfiguration

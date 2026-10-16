@@ -1,0 +1,14 @@
+{
+  "manifestVersion": 2,
+  "apiVersion": 2,
+  "pluginId": "example.generic-webhook",
+  "name": "Generic Webhook",
+  "description": "将 PulseLink 通知发送到自建 Webhook 接收端。",
+  "version": "1.0.0",
+  "minimumHostVersion": "26.10.15.003",
+  "projectUrl": "https://example.invalid/your-plugin",
+  "helpUrl": "https://example.invalid/your-plugin/help",
+  "entryAssembly": "PulseLink.NotificationPlugins.GenericWebhook.dll",
+  "entryType": "PulseLink.NotificationPlugins.GenericWebhook.GenericWebhookPlugin",
+  "sha256": ""
+}

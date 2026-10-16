@@ -47,6 +47,11 @@ html:has(.guide-document){scroll-snap-type:none;scroll-behavior:smooth}.guide-do
   min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere
 }
 .package-tabs{max-width:100%;flex-wrap:wrap}
+.guide-doc a.button{color:#fff}
+.guide-doc a.button.secondary{color:#355449}
+.guide-doc section{scroll-margin-top:calc(var(--header) + 20px)}
+.guide-document .nav-wrap,.guide-document .nav-links{flex-wrap:wrap}
+@media(max-width:380px){.guide-document .nav-wrap{padding-inline:16px}.guide-document .nav-links{gap:8px}.guide-document .logo{font-size:18px;gap:6px}.guide-document .project-logo{width:28px;height:28px}}
 @media (max-width:760px) {
   .nav-links.is-open{grid-template-columns:repeat(2,minmax(0,1fr))}
   #downloads .download-foot{padding-bottom:55px}

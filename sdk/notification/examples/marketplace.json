@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "providerId": "your-provider",
+  "summary": "自建 Webhook 通知渠道。",
+  "maintainers": [{"id": "your-provider", "displayName": "Your team", "url": "https://example.invalid/your-team"}],
+  "license": "填写你的插件许可证",
+  "sourceUrl": "https://example.invalid/your-plugin",
+  "documentationUrl": "https://example.invalid/your-plugin/help",
+  "supportUrl": "https://example.invalid/your-plugin/support",
+  "issueTrackerUrl": "https://example.invalid/your-plugin/issues",
+  "privacyPolicyUrl": "https://example.invalid/your-plugin/privacy",
+  "iconPath": null,
+  "screenshots": [],
+  "tags": ["notification", "webhook"]
+}

@@ -12,12 +12,14 @@ if actual != manifest['files']:
     raise SystemExit('SDK contract sources differ from contract-manifest.json; verify host compatibility before packaging.')
 output = root / 'website/assets/PulseLink-Notification-SDK-26.10.15.003.zip'
 (output.parent / 'PulseLink-Notification-Development-Guide.md').write_bytes((source / 'DEVELOPING.md').read_bytes().replace(b'\r\n', b'\n'))
-with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
+with zipfile.ZipFile(output, 'w', zipfile.ZIP_STORED) as archive:
     for path in sorted(source.rglob('*')):
         if not path.is_file() or any(p in ('bin', 'obj') for p in path.relative_to(source).parts) or path.suffix not in ('.cs', '.csproj', '.props', '.md', '.json'):
             continue
         info = zipfile.ZipInfo('PulseLink-Notification-SDK/' + path.relative_to(source).as_posix(), (2026, 10, 16, 0, 0, 0))
-        info.compress_type = zipfile.ZIP_DEFLATED
+        # Stable bytes across Windows/Linux and different bundled zlib versions.
+        info.create_system = 3
+        info.compress_type = zipfile.ZIP_STORED
         info.external_attr = 0o644 << 16
         archive.writestr(info, path.read_bytes().replace(b'\r\n', b'\n'))
 output.with_suffix('.zip.sha256').write_text(hashlib.sha256(output.read_bytes()).hexdigest() + '  ' + output.name + '\n', encoding='utf-8', newline='\n')

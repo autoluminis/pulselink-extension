@@ -20,6 +20,9 @@ class SdkArchiveTests(unittest.TestCase):
             for required in ['README.md', 'DEVELOPING.md', 'Directory.Build.props', 'examples/plugin.json', 'examples/marketplace.json', 'tests/Program.cs']:
                 self.assertIn('PulseLink-Notification-SDK/' + required, names)
             for name in names:
+                info = archive.getinfo(name)
+                self.assertEqual(info.create_system, 3)
+                self.assertEqual(info.compress_type, zipfile.ZIP_STORED)
                 relative = name.removeprefix('PulseLink-Notification-SDK/')
                 self.assertFalse(set(Path(relative).parts) & {'bin', 'obj', '..'})
                 self.assertIn(Path(relative).suffix, {'.cs', '.csproj', '.props', '.md', '.json'})

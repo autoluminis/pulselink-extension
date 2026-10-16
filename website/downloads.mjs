@@ -1,4 +1,4 @@
-import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex, readDownloadSnapshot} from './release-core.mjs';
+import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex, readDownloadSnapshot} from './release-core.mjs?v=download-cache-1';
 const status = document.getElementById('release-status');
 const title = document.getElementById('package-title');
 const purpose = document.getElementById('package-purpose');

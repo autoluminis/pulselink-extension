@@ -71,3 +71,13 @@ export function selectOta(index, releases, config) {
   if (assetDigest && assetDigest !== index.packageSha256.toUpperCase()) throw new Error('OTA digest mismatch');
   return selected;
 }
+
+/** Cached metadata is a download hint, never a replacement for client signature checks. */
+export function readDownloadSnapshot(snapshot, config) {
+  if (!snapshot || snapshot.schemaVersion !== 1 || snapshot.repository !== config.repository || snapshot.channel !== config.channel || snapshot.runtimeIdentifier !== config.runtimeIdentifier || !Number.isFinite(Date.parse(snapshot.generatedAt)) || Date.parse(snapshot.generatedAt) > Date.now() + 300000) throw new Error('Invalid download snapshot');
+  const releases = publicStableReleases(snapshot.releases);
+  const setup = selectInstaller(releases, config);
+  const ota = selectOta(snapshot.index, releases, config);
+  const cached = pkg => pkg ? {...pkg, cachedAt:snapshot.generatedAt} : null;
+  return {setup:cached(setup), ota:cached(ota)};
+}

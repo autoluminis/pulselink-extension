@@ -1,4 +1,4 @@
-import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex} from './release-core.mjs';
+import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex, readDownloadSnapshot} from './release-core.mjs?v=download-cache-1';
 const status = document.getElementById('release-status');
 const title = document.getElementById('package-title');
 const purpose = document.getElementById('package-purpose');
@@ -11,6 +11,7 @@ let kind = 'setup';
 let state = {setup:null, ota:null, setupError:false, otaError:false};
 let started = false;
 let loading = false;
+const cacheKey = 'pulselink-download-snapshot-v1';
 function sizeText(size) { return (size / 1024 / 1024).toFixed(1) + ' MB'; }
 function render() {
   document.querySelectorAll('[data-package]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.package === kind)));
@@ -21,7 +22,7 @@ function render() {
   document.getElementById('download-help-copy').textContent = isSetup ? '安装 EXE 与 OTA 更新包分别提供。若尚无正式安装程序，官网会保留不可用状态，不会以 OTA 替代。' : '官网显示稳定通道当前发布的 OTA；是否适用你的当前版本，由客户端结合最低版本、平台与签名校验判断。';
   link.hidden = true; link.removeAttribute('href'); metadata.hidden = true; copy.hidden = true; checksum.hidden = true; checksum.removeAttribute('href');
   refresh.disabled = loading;
-  if (loading) { status.textContent = '正在读取官方发布信息…'; return; }
+  if (loading && !state[kind]) { status.textContent = '正在读取官方发布信息…'; return; }
   if (state[kind + 'Error']) { status.textContent = state[kind + 'Error']; return; }
   const pkg = state[kind];
   if (!pkg) { status.textContent = isSetup ? '官方仓库尚无可用的首次安装程序。' : '稳定通道尚无可用的 OTA 更新包。'; return; }
@@ -30,6 +31,7 @@ function render() {
   if (pkg.publishedAt && Number.isFinite(Date.parse(pkg.publishedAt))) pieces.push('发布于 ' + new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Taipei', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date(pkg.publishedAt)));
   metadata.textContent = pieces.join(' · '); metadata.hidden = false;
   status.textContent = isSetup ? '已找到公开发行的安装程序。' : '来自官方稳定通道索引；下载后请在系统内校验并应用。';
+  if (pkg.cachedAt) status.textContent = `使用缓存下载地址（记录于 ${new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'}).format(new Date(pkg.cachedAt))}），可能不是最新版本。${loading ? '正在检查最新发布…' : '在线查询暂不可用，可下载此版本或重新检查。'}`;
   link.href = pkg.url; link.textContent = isSetup ? '下载首次安装程序 ↓' : '下载 OTA 更新包 ↓'; link.hidden = false;
   copy.hidden = !pkg.sha256;
   copy.textContent = '复制 SHA-256';
@@ -70,21 +72,44 @@ async function load() {
   started = true; loading = true; render();
   try {
     const config = validateConfig(await fetchJson(new URL('release-config.json', location.href)));
+    let cached = {setup:null, ota:null};
+    let cachedIndex = null;
+    let cacheDate = 0;
+    function useCache(snapshot) {
+      const parsed = readDownloadSnapshot(snapshot, config);
+      if (Date.parse(snapshot.generatedAt) < cacheDate) return;
+      cached = parsed; cachedIndex = snapshot.index; cacheDate = Date.parse(snapshot.generatedAt);
+      state = {...parsed, setupError:false, otaError:false}; render();
+    }
+    try { useCache(JSON.parse(localStorage.getItem(cacheKey))); } catch { /* Storage may be disabled or invalid. */ }
     const base = `https://raw.githubusercontent.com/${config.repository}/${config.releaseBranch}/`;
     const [releaseResult, indexResult] = await Promise.allSettled([
       fetchReleases(config),
-      fetchJson(`${base}ota/${config.channel}/${config.runtimeIdentifier}/latest.release.json`, true)
+      fetchJson(`${base}ota/${config.channel}/${config.runtimeIdentifier}/latest.release.json`, true),
+      fetchJson(new URL('download-snapshot.json', location.href), true).then(snapshot=>{try {useCache(snapshot);}catch{ /* Bad snapshots never supply links. */ }})
     ]);
     state = {setup:null, ota:null, setupError:false, otaError:false};
     let releases = null;
     if (releaseResult.status === 'fulfilled') {
       try { releases = publicStableReleases(releaseResult.value); state.setup = selectInstaller(releases, config); }
       catch (error) { state.setupError = failureText(error, '安装包发布信息'); }
-    } else state.setupError = failureText(releaseResult.reason, '安装包发布 API');
+    } else if (cached.setup && !(releaseResult.reason instanceof SyntaxError)) state.setup = cached.setup;
+    else state.setupError = failureText(releaseResult.reason, '安装包发布 API');
     if (indexResult.status === 'fulfilled') {
       try { state.ota = releases ? selectOta(indexResult.value, releases, config) : selectOtaFromIndex(indexResult.value, config); }
       catch (error) { state.otaError = failureText(error, '官方 OTA 索引'); }
-    } else state.otaError = failureText(indexResult.reason, '官方 OTA 索引');
+    } else if (cached.ota && !(indexResult.reason instanceof SyntaxError)) {
+      try { state.ota = releases ? {...selectOta(cachedIndex, releases, config), cachedAt:cached.ota.cachedAt} : cached.ota; }
+      catch (error) { state.otaError = failureText(error, '缓存 OTA 发布信息'); }
+    }
+    else state.otaError = failureText(indexResult.reason, '官方 OTA 索引');
+    if (releaseResult.status === 'fulfilled' && indexResult.status === 'fulfilled') {
+      try {
+        const snapshot = {schemaVersion:1,repository:config.repository,channel:config.channel,runtimeIdentifier:config.runtimeIdentifier,generatedAt:new Date().toISOString(),releases:releaseResult.value,index:indexResult.value};
+        readDownloadSnapshot(snapshot, config);
+        localStorage.setItem(cacheKey, JSON.stringify(snapshot));
+      } catch { /* Do not persist incomplete metadata; storage failure cannot break downloads. */ }
+    }
   } catch (error) { const message = failureText(error, '站点下载配置'); state = {setup:null, ota:null, setupError:message, otaError:message}; }
   finally { loading = false; render(); }
 }

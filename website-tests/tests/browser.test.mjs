@@ -38,8 +38,10 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     const context=await browser.newContext({viewport:{width:1440,height:900},acceptDownloads:true});
     await context.addCookies([{name:'test_site_session',value:'authenticated',domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Lax'}]);
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    let apiDown=false,indexDown=false,tamperCatalog=false;
-    await page.route('https://api.github.com/**',r=>r.fulfill({status:apiDown?403:200,contentType:'application/json',body:JSON.stringify(apiDown?{}:publicReleases)}));
+    let apiDown=false,indexDown=false,tamperCatalog=false,snapshotDown=false,snapshotInvalid=false,apiStatus=403;
+    const snapshot={schemaVersion:1,repository:'autoluminis/pulselink-extension',channel:'stable',runtimeIdentifier:'win-x64',generatedAt:new Date(Date.now()-86400000).toISOString(),releases:structuredClone(publicReleases),index:release.index};
+    await page.route('**/download-snapshot.json',r=>r.fulfill({status:snapshotDown?503:200,contentType:'application/json',body:JSON.stringify(snapshotInvalid?{}:snapshot)}));
+    await page.route('https://api.github.com/**',r=>r.fulfill({status:apiDown?apiStatus:200,contentType:'application/json',body:JSON.stringify(apiDown?{}:publicReleases)}));
     await page.route('https://raw.githubusercontent.com/**',r=>{
       const path=r.request().url().split('/release/')[1];
       if(path.startsWith('ota/'))return r.fulfill({status:indexDown?503:200,contentType:'application/json',body:JSON.stringify(release.index)});
@@ -85,8 +87,35 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     assert.equal(await page.evaluate(async()=>{const r=await fetch('release-config.json',{credentials:'omit'});return r.status;}),401);
     apiDown=true;await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));
     assert(await page.locator('#package-download').isVisible(),'API rate limiting does not hide valid OTA');
-    indexDown=true;await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));
-    assert.equal(await page.locator('#package-download').getAttribute('href'),null);assert.match(await page.locator('#release-status').innerText(),/503/);indexDown=false;
+    await page.locator('[data-package=setup]').click();assert(await page.locator('#package-download').isVisible());assert.match(await page.locator('#release-status').innerText(),/缓存下载地址/);
+    indexDown=true;await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    await page.locator('[data-package=ota]').click();assert(await page.locator('#package-download').isVisible());assert.match(await page.locator('#release-status').innerText(),/缓存下载地址/);
+    // A first-time visitor still gets addresses with both GitHub endpoints unavailable.
+    await page.evaluate(()=>localStorage.clear());apiStatus=429;await page.reload();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    assert(await page.locator('#package-download').isVisible());assert.match(await page.locator('#release-status').innerText(),/缓存下载地址/);
+    // Browser history covers a same-origin snapshot outage after a successful visit.
+    apiDown=false;indexDown=false;await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    const originalAssets=stableRelease.assets;
+    stableRelease.assets=originalAssets.filter(a=>a.name!=='PulseLink-Setup.exe');
+    await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    assert.equal(await page.locator('#package-download').getAttribute('href'),null,'confirmed installer withdrawal overrides cached metadata');
+    stableRelease.assets=originalAssets;
+    await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    stableRelease.assets=originalAssets.filter(a=>!a.name.endsWith('.ota.zip'));indexDown=true;
+    await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    await page.locator('[data-package=ota]').click();assert.equal(await page.locator('#package-download').getAttribute('href'),null,'confirmed OTA withdrawal overrides cached index');
+    await page.locator('[data-package=setup]').click();stableRelease.assets=originalAssets;indexDown=false;
+    await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    apiDown=true;indexDown=true;snapshotDown=true;await page.reload();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    assert(await page.locator('#package-download').isVisible());assert.match(await page.locator('#release-status').innerText(),/缓存下载地址/);
+    // Corrupt metadata cannot manufacture a link when all sources are unavailable.
+    await page.evaluate(()=>localStorage.clear());snapshotDown=false;snapshotInvalid=true;await page.reload();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    assert.equal(await page.locator('#package-download').getAttribute('href'),null);
+    snapshotInvalid=false;
+    await page.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new Error('Storage disabled');}}));
+    await page.reload();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);
+    assert(await page.locator('#package-download').isVisible(),'same-origin snapshot works with browser storage disabled');
+    apiDown=false;indexDown=false;
     await page.locator('.nav-links a[href="#notifications"]').click();await page.locator('[data-open-plugins=catalog]').click();await page.waitForFunction(()=>document.getElementById('plugin-catalog-status').textContent.includes('已加载'));
     assert.equal(await page.locator('.catalog-plugin').count(),2);
     const docs=await page.locator('.catalog-plugin-actions a.text-link').evaluateAll(a=>a.map(x=>x.href));assert(docs.every(x=>x.startsWith(base+'/guides/')));
@@ -112,7 +141,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     await page.locator('.doc-nav a[href="#trust"]').click();
     await page.waitForFunction(()=>{const y=document.getElementById('trust').getBoundingClientRect().top;return y>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header'))&&y<200;});
     await page.goto(base+'/#home');await page.getByRole('button',{name:'菜单'}).click();await page.locator('.nav-links a[href="#trial"]').click();assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'),'false');
-    await context.clearCookies();await page.goto(base+'/#downloads');await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));assert.match(await page.locator('#release-status').innerText(),/登录/);
+    await context.clearCookies();await page.goto(base+'/#downloads');await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('refresh-release').disabled);assert.match(await page.locator('#release-status').innerText(),/登录/);
     assert.deepEqual(errors,[]);
   }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
 });

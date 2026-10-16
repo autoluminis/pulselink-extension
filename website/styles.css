@@ -30,3 +30,29 @@ html{scroll-behavior:auto}html.is-transitioning{scroll-snap-type:none!important}
 .plugin-entry-actions button{font-family:inherit;font-weight:600;line-height:1.7}
 
 html:has(.guide-document){scroll-snap-type:none;scroll-behavior:smooth}.guide-document{background:#fff}.guide-doc{max-width:980px;margin:auto;padding:130px 35px 65px}.guide-doc .breadcrumb{font-size:13px;color:#73836a;margin-bottom:25px}.guide-doc h1{font-size:42px;line-height:1.4;letter-spacing:-1px;margin:12px 0 23px}.guide-doc .doc-lead{font-size:17px;color:#60735b;line-height:1.9;margin:0 0 30px}.guide-doc section{padding:27px 0;border-top:1px solid #e1e8db}.guide-doc h2{font-size:25px;margin:0 0 16px}.guide-doc h3{font-size:18px;margin:22px 0 10px}.guide-doc p,.guide-doc li{font-size:15px;line-height:1.95;color:#63745d}.guide-doc ol,.guide-doc ul{padding-left:23px}.guide-doc pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.9 ui-monospace,monospace;color:#47713e;background:#f4f8ef;border:1px solid #dfe9d5;border-radius:7px;padding:20px}.guide-doc code{overflow-wrap:anywhere}.guide-doc .doc-note{border-left:3px solid #b8cda7;padding:13px 18px;background:#f6f9f3;font-size:13px;line-height:1.9;color:#6b7e60}.doc-nav{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#087e70;margin:0 0 32px}.guide-doc a{color:#087e70}.doc-footer{font-size:12px;color:#89957f;border-top:1px solid #e3e9de;padding-top:23px;margin-top:25px}.guide-document .nav-links{display:flex!important;position:static;border:0;box-shadow:none;background:none;padding:0;gap:20px}.guide-document .nav-links a{display:block!important}.guide-document .nav-links a::after{display:none}@media(max-width:760px){.guide-doc{padding:105px 24px 40px}.guide-doc h1{font-size:31px}.guide-doc .doc-lead{font-size:15px}.guide-doc h2{font-size:23px}.guide-doc p,.guide-doc li{font-size:14px}.guide-doc pre{font-size:11px;padding:15px}.guide-document .nav-wrap{padding:0 22px}.guide-document .nav-links{gap:12px}.guide-document .nav-links a{font-size:12px}.guide-document .logo{font-size:20px}.doc-nav{gap:12px 20px;font-size:12px}}
+
+
+/* Keep navigation and actions fully usable at intermediate and narrow widths. */
+@media (min-width:761px) and (max-width:1020px) {
+  .nav-wrap{padding-inline:28px}
+  .menu-toggle{display:block}
+  .nav-links{display:none;position:absolute;top:var(--header);left:0;right:0;padding:16px 28px;background:#fff;border-bottom:1px solid #e2eae5;box-shadow:0 12px 18px #234a3010}
+  .nav-links.is-open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px}
+  .nav-links a{padding:8px 0}
+  .nav-links a[aria-current=true]::after{display:none}
+  .nav-links .nav-download,.nav-links .nav-download[aria-current=true]{padding:8px 0;background:transparent;color:#087e70;border:0}
+}
+.actions,.guide-actions,.package-actions,.release-tools,.plugin-entry-actions,.catalog-plugin-actions,.download-foot{min-width:0}
+.button,.text-link,.checksum-button,.release-tools button,.package-tabs button,.plugin-entry-actions button{
+  min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere
+}
+.package-tabs{max-width:100%;flex-wrap:wrap}
+@media (max-width:760px) {
+  .nav-links.is-open{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #downloads .download-foot{padding-bottom:55px}
+}
+@media (max-width:380px) {
+  .actions .button,.guide-actions .button,.package-actions .button{flex:1 1 100%;width:100%}
+  .package-tabs{display:flex;width:100%}
+  .package-tabs button{flex:1 1 auto}
+}

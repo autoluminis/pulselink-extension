@@ -55,6 +55,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
       await page.locator(`.nav-links a[href="#${id}"]`).click();
       await page.waitForFunction(id=>document.querySelector(`.nav-links a[href="#${id}"]`).getAttribute('aria-current')==='true',id);
       assert(Math.abs(await page.locator('#'+id).evaluate(s=>s.getBoundingClientRect().top)-82)<3);
+      assert.deepEqual(await page.locator('#'+id+' .slide-inner').evaluate(el=>({transform:getComputedStyle(el).transform,animations:el.getAnimations({subtree:true}).filter(a=>a.animationName?.startsWith('chapter-')).length})),{transform:'none',animations:0},'cards stay stationary after navigation');
     }
     await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));
     assert.match(await page.locator('#release-status').innerText(),/尚无/);

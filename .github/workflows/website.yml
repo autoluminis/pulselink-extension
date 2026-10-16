@@ -5,12 +5,14 @@ on:
     paths:
       - 'website/**'
       - 'website-tests/**'
+      - 'sdk/**'
       - '.github/workflows/website.yml'
   push:
     branches: [release]
     paths:
       - 'website/**'
       - 'website-tests/**'
+      - 'sdk/**'
       - '.github/workflows/website.yml'
   workflow_dispatch:
 
@@ -38,6 +40,15 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           sudo apt-get install --no-install-recommends --yes fonts-noto-cjk
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify SDK archive and build extracted example
+        run: |
+          python sdk/tools/package-notification-sdk.py
+          git diff --exit-code -- website/assets/PulseLink-Notification-SDK-26.10.15.003.zip website/assets/PulseLink-Notification-SDK-26.10.15.003.zip.sha256
+          unzip -q website/assets/PulseLink-Notification-SDK-26.10.15.003.zip -d "$RUNNER_TEMP/notification-sdk"
+          dotnet build "$RUNNER_TEMP/notification-sdk/PulseLink-Notification-SDK/examples/GenericWebhook.csproj" -c Release
       - name: Check website and browser behavior
         run: npm test --prefix website-tests
 

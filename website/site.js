@@ -15,18 +15,9 @@ let lastWheel = 0;
 const aliases = {connect:'connections', download:'downloads', start:'manual', faq:'manual', sdk:'manual'};
 function headerHeight() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header')); }
 function closeMenu() { menu.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false'); }
-function mark(index, animate = true) {
-  const changed = current !== index;
+function mark(index) {
   current = index;
-  slides.forEach((slide, i) => {
-    slide.classList.toggle('is-active', i === index);
-    if (i !== index) slide.classList.remove('is-revealing');
-  });
-  if (animate && changed && !reduced.matches) {
-    slides[index].classList.remove('is-revealing');
-    void slides[index].offsetWidth;
-    slides[index].classList.add('is-revealing');
-  }
+  slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
   const hash = '#' + slides[index].id;
   links.forEach(link => { if (link.hash === hash) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current'); });
   document.querySelector('.current-chapter').textContent = document.querySelector('.nav-links a[href="' + hash + '"]').textContent;
@@ -41,7 +32,6 @@ function cancelAnimation() {
   cancelAnimationFrame(animation.frame);
   animation = null;
   document.documentElement.classList.remove('is-transitioning');
-  slides.forEach(s => s.classList.remove('is-departing'));
 }
 function go(index, pushHistory = false) {
   index = Math.max(0, Math.min(slides.length - 1, index));
@@ -55,12 +45,11 @@ function go(index, pushHistory = false) {
   const distance = target - start;
   if (reduced.matches || Math.abs(distance) < 2) {
     scrollTo({top:target, behavior:'instant'});
-    mark(index, false);
+    mark(index);
     wheelUntil = performance.now() + 200;
     return;
   }
   document.documentElement.classList.add('is-transitioning');
-  slides[current].classList.add('is-departing');
   const duration = Math.min(1050, 720 + Math.abs(distance) * .07);
   const started = performance.now();
   const state = {index, frame:0};
@@ -75,7 +64,6 @@ function go(index, pushHistory = false) {
     else {
       scrollTo({top:target, behavior:'instant'});
       animation = null;
-      slides.forEach(s => s.classList.remove('is-departing'));
       document.documentElement.classList.remove('is-transitioning');
       mark(index);
       wheelUntil = now + 220;
@@ -162,6 +150,6 @@ addEventListener('popstate', restoreHash);
 const initial = aliases[location.hash.slice(1)] || location.hash.slice(1);
 const initialIndex = Math.max(0, slides.findIndex(slide => slide.id === initial));
 slides[initialIndex].scrollIntoView({behavior:'instant', block:'start'});
-mark(initialIndex, false);
+mark(initialIndex);
 
 document.addEventListener('pulselink:modal-open', cancelAnimation);

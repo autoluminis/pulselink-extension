@@ -1,0 +1,27 @@
+{
+  "sdkVersion": "26.10.15.003",
+  "targetFramework": "net10.0",
+  "files": {
+    "IPulseLinkPlugin.cs": "0f1aa2c9bb6e0fb4aaf21be9386be4e24634bc25581c23a2a2d494872520f0c2",
+    "Notifications/NotificationDeliveryReceipt.cs": "3b123b82bcd1c0f439ad126755068e187b731700caeac11a72a4d2b6ccdb2951",
+    "Notifications/NotificationPluginHealth.cs": "4fdb186e26c53fcdcfea4d367f2fa179c7989d6a77d906d90ae2bae6f180650a",
+    "Notifications/NotificationDeliveryConfirmation.cs": "aa2396bb08e151fecf4bc1b3f6a2c00ebd74edf582274060bf9562749e97a6f8",
+    "Notifications/INotificationContactTypeCatalog.cs": "022d7a568bb179674ce167d067280be5c3721e9bf6588a5fea8ce98d433876b2",
+    "Notifications/NotificationPluginLogEntry.cs": "c2c17e24a27f26b5ed6c3c6ec84037adeea510ad58f1f3db4bb42675074690a7",
+    "Notifications/NotificationPluginHttpRequest.cs": "6e2c0dec14dd6c8990f68c9ed129c1704f20b98654915b0cee8fa17f65ed3272",
+    "Notifications/INotificationPluginHealthReporter.cs": "e3fddb362e6f8149ce67171aaa2e1d912903bca16374197639d4448ab6439b4b",
+    "Notifications/INotificationPluginConfigurationAware.cs": "587808a7288db1c4c9b43d27b0a5edd72dad712a3457dda78a6f96060ada7a6e",
+    "Notifications/INotificationPluginRuntimeAware.cs": "d1d979d5b7d9dbe5c5609b4717e08fe19466bcd63f5d4339b25991784ad39332",
+    "Notifications/INotificationPluginOperations.cs": "bcaa973c1b13b740be8114cc5fffeba5448f94128576c2464d620e7757669215",
+    "Notifications/NotificationChannelValidationResult.cs": "3dc3f486bc5c31610451f92740c97bb379111930e6d10723a2a05e7bb530ce27",
+    "Notifications/NotificationPluginChannelConfiguration.cs": "faeaace96398ad8c691d12d3d5eff7a77caf37a67de9fb00f9f61699733efced",
+    "Notifications/INotificationChannel.cs": "d7ac070eabbba5ef60aaf908ea51e4632d7ddbea162bbc451536507ba0530f61",
+    "Notifications/NotificationDispatchMessage.cs": "bc49612c3960a3d34375b78648b47b2759fa9384e675da39e41994bf3eb5d8fa",
+    "Notifications/NotificationContactTypeDefinition.cs": "6034682491800a076022bf2364d8b0e5480244f90978ec608b3e4d8972157aa5",
+    "Notifications/NotificationPluginHttpResponse.cs": "959d025142e9ff25b0ef196070cc1e322a2cccffea951a2b7e5d1b295412c636",
+    "Notifications/NotificationDeliveryResult.cs": "40e6ad518d944995b57fd6d00f2f16a151e4ac4bbe93979c3dfe1b42abb17057",
+    "Notifications/NotificationRecipient.cs": "1e4a1317c7f60437b5587ee8aaff0a09148c7b8441601a741f18880191d7ce60",
+    "Notifications/INotificationChannelPlugin.cs": "f91d8847028e6e611a1b52a6579c5c148a6843454eb6024123362324858738fe",
+    "Notifications/INotificationPluginRuntime.cs": "fb1a23572c39eff22c8190b5b49d8e849aea262577283a534d320e608d7fd929"
+  }
+}

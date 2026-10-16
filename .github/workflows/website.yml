@@ -1,0 +1,78 @@
+name: Website checks and Pages
+
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'website-tests/**'
+      - '.github/workflows/website.yml'
+  push:
+    branches: [release]
+    paths:
+      - 'website/**'
+      - 'website-tests/**'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website-tests/package-lock.json
+      - name: Install check dependencies
+        run: npm ci --prefix website-tests
+      - name: Install Chromium
+        working-directory: website-tests
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install --no-install-recommends --yes fonts-noto-cjk
+      - name: Check website and browser behavior
+        run: npm test --prefix website-tests
+
+  deploy:
+    if: github.ref == 'refs/heads/release' && github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Pages configuration
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.build_type' > "${RUNNER_TEMP}/pages-build-type" 2> "${RUNNER_TEMP}/pages-error"; then
+            if [ "$(cat "${RUNNER_TEMP}/pages-build-type")" = "workflow" ]; then
+              echo 'ready=true' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo 'ready=false' >> "$GITHUB_OUTPUT"
+          echo 'Website checks passed. Pages deployment was skipped: select GitHub Actions in Settings → Pages, confirm the github-pages environment permits the release branch, then run this workflow on release.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/configure-pages@v5
+        if: steps.pages.outputs.ready == 'true'
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outputs.ready == 'true'
+        with:
+          path: website
+      - uses: actions/deploy-pages@v4
+        id: deployment
+        if: steps.pages.outputs.ready == 'true'

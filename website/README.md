@@ -64,3 +64,16 @@ Pages 未配置时，检查仍执行，部署明确跳过，不会将跳过报�
 - Logo 与 favicon 来自项目现用图标，保持原始品牌图形。
 - 试用额度依据当前项目实现：100 点位、100 条规则、30 天热历史保留；当前未设固定试用到期日。999 台设备是基础容量。
 - 产品能力变化、正式安装包发布、公钥轮换、官方发行方新增及试用规则变更，应同步对应页面和配置。不要手改已签名插件目录来更新官网文案。
+
+## 通知 SDK 与指导书维护
+
+完整开发指导书源文件为 `sdk/notification/DEVELOPING.md`。官网 `developer.html` 提供在线步骤，`assets/PulseLink-Notification-Development-Guide.md` 和 SDK ZIP 提供离线资料。修改后在仓库根目录运行：
+
+```sh
+python sdk/tools/package-notification-sdk.py
+python sdk/tools/test-notification-sdk.py
+```
+
+打包器先核对冻结契约摘要，统一文本换行并排除构建产物，再同步指导书、ZIP 和 SHA-256。契约文件变化须先核对宿主兼容性，不能只更新摘要跳过兼容验证。SDK 修订内容与契约版本分别记录，当前契约仍为 26.10.15.003。
+
+CI 另外从 ZIP 解压构建示例并运行内存 HTTP 回归，包含 10 秒发送超时。官网测试遍历所有页面本地资源与锚点，并检查文档按钮对比度、SDK 实际下载及固定页眉下的目录跳转。Windows 本地也可使用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指向 Edge；`WEBSITE_SCREENSHOT_DIR` 可选择保存桌面和手机文档截图。

@@ -1,19 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile, stat} from 'node:fs/promises';
-import {join, resolve, extname} from 'node:path';
+import {readFile, stat, mkdir} from 'node:fs/promises';
+import {join, resolve, extname, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 const site=fileURLToPath(new URL('../../website/',import.meta.url));
 const release=JSON.parse(await readFile(new URL('../fixtures/releases.json',import.meta.url)));
 const catalog=JSON.parse(await readFile(new URL('../fixtures/catalog.json',import.meta.url)));
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.pdf':'application/pdf','.png':'image/png','.ico':'image/x-icon'};
+async function checkButtonContrast(page, label){
+  const actions=await page.locator('.button').evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).map(el=>{
+    const luminance=color=>{const rgb=color.match(/[\d.]+/g).slice(0,3).map(x=>{const v=Number(x)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
+    const style=getComputedStyle(el),a=luminance(style.color),b=luminance(style.backgroundColor);
+    return {label:el.textContent,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
+  }));
+  for(const action of actions){assert(action.label.trim(),`${label}: empty button`);assert(action.ratio>=4.5,`${label}: ${action.label} contrast ${action.ratio}`);}
+}
 test('whole website: scrolling, private auth, downloads, trusted plugins, public guides and PDF', {timeout:120000}, async()=>{
   const server=createServer(async(req,res)=>{
     try{
       const relative=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\/pulselink-extension(?:\/|$)/,'/').replace(/^\/+/,'')||'index.html';
-      const file=resolve(site,relative);if(!file.startsWith(resolve(site)+'/')){res.writeHead(403);res.end();return;}
+      const file=resolve(site,relative);if(!file.startsWith(resolve(site)+sep)){res.writeHead(403);res.end();return;}
       if(relative.endsWith('config.json')&&!(req.headers.cookie||'').includes('test_site_session=authenticated')){res.writeHead(401);res.end('Unauthorized');return;}
       const data=await readFile(file);res.writeHead(200,{'Content-Type':mime[extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end('Not found');}
@@ -58,6 +66,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
         .filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
         .every(el=>{const rect=el.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+2;}));
       assert(actionsFit,`action labels fit within viewport at ${width}`);
+      await checkButtonContrast(page,`homepage ${width}`);
       if(width>760&&width<=1020){assert(await page.locator('.menu-toggle').isVisible(),`responsive navigation available at ${width}`);await page.locator('.menu-toggle').click();assert(await page.locator('.nav-links a[href="#downloads"]').isVisible());await page.locator('.menu-toggle').click();}
       if(width>=1024){const sizes=await page.locator('.slide').evaluateAll(slides=>slides.map(s=>({height:s.getBoundingClientRect().height,available:innerHeight-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header'))})));assert(sizes.every(s=>s.height<=s.available+2),`full screens fit ${width}`);}
     }
@@ -91,8 +100,17 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     const event=page.waitForEvent('download');await page.getByRole('link',{name:'下载 PDF ↓'}).click();assert.equal(await (await event).failure(),null);
     for(const file of ['developer.html','guides/dtu.html','guides/wxpusher.html']){
       for(const width of [1440,390,320]){await page.setViewportSize({width,height:900});await page.goto(base+'/'+file);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`guide ${file} at ${width}`);}
+      await checkButtonContrast(page,file);
       const hrefs=await page.locator('a[href]').evaluateAll(a=>a.map(x=>x.href));for(const href of hrefs.filter(x=>x.startsWith(base)))assert.equal((await page.request.get(href)).status(),200,href);
     }
+    await page.goto(base+'/developer.html');
+    if(process.env.WEBSITE_SCREENSHOT_DIR){
+      await mkdir(process.env.WEBSITE_SCREENSHOT_DIR,{recursive:true});
+      for(const width of [1440,320]){await page.setViewportSize({width,height:900});await page.screenshot({path:join(process.env.WEBSITE_SCREENSHOT_DIR,`developer-${width}.png`)});}
+    }
+    const sdkDownload=page.waitForEvent('download');await page.getByRole('link',{name:'下载通知插件开发包',exact:true}).click();assert.equal(await (await sdkDownload).failure(),null);
+    await page.locator('.doc-nav a[href="#trust"]').click();
+    await page.waitForFunction(()=>{const y=document.getElementById('trust').getBoundingClientRect().top;return y>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header'))&&y<200;});
     await page.goto(base+'/#home');await page.getByRole('button',{name:'菜单'}).click();await page.locator('.nav-links a[href="#trial"]').click();assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'),'false');
     await context.clearCookies();await page.goto(base+'/#downloads');await page.locator('#refresh-release').click();await page.waitForFunction(()=>!document.getElementById('release-status').textContent.includes('正在'));assert.match(await page.locator('#release-status').innerText(),/登录/);
     assert.deepEqual(errors,[]);

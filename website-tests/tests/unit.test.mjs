@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {join} from 'node:path';
+import {join, relative, resolve} from 'node:path';
 import {validateConfig, publicStableReleases, selectInstaller, selectOta, selectOtaFromIndex} from '../../website/release-core.mjs';
 import {readOfficialCatalog, catalogPath} from '../../website/plugin-catalog-core.mjs';
 const website = fileURLToPath(new URL('../../website/', import.meta.url));
@@ -11,6 +11,23 @@ const catalog = JSON.parse(await readFile(new URL('../fixtures/catalog.json', im
 const config = validateConfig(JSON.parse(await readFile(join(website, 'release-config.json'))));
 const trust = JSON.parse(await readFile(join(website, 'plugin-catalog-config.json')));
 const readBytes = path => { assert(catalog[path]); return Uint8Array.from(Buffer.from(catalog[path], 'base64')); };
+
+test('every public HTML page has valid local assets, links and fragment destinations', async () => {
+  async function pages(dir) {const result=[];for(const item of await readdir(dir,{withFileTypes:true})){const path=join(dir,item.name);if(item.isDirectory())result.push(...await pages(path));else if(path.endsWith('.html'))result.push(path);}return result;}
+  const origin='https://website.invalid/pulselink-extension/';
+  for(const file of await pages(website)){
+    const content=await readFile(file,'utf8');
+    const url=new URL(relative(website,file).replaceAll('\\','/'),origin);
+    for(const match of content.matchAll(/\b(?:href|src)="([^"]+)"/g)){
+      const target=new URL(match[1],url);
+      if(target.origin!==new URL(origin).origin)continue;
+      assert(target.pathname.startsWith('/pulselink-extension/'),`${file}: project-path escape ${match[1]}`);
+      const path=resolve(website,decodeURIComponent(target.pathname.slice('/pulselink-extension/'.length))||'index.html');
+      const data=await readFile(path,'utf8');
+      if(target.hash&&path.endsWith('.html'))assert(data.includes(`id="${decodeURIComponent(target.hash.slice(1))}"`),`${file}: missing target ${match[1]}`);
+    }
+  }
+});
 test('first installation and OTA are independent, and the stable index is authoritative', () => {
   const available = publicStableReleases(releases.releases);
   assert.equal(selectInstaller(available, config), null);

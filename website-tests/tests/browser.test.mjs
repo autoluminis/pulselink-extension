@@ -41,7 +41,7 @@ test('whole website: scrolling, private auth, downloads, trusted plugins, public
     });
     await page.goto(base+'/#home');
     await page.waitForFunction(()=>document.getElementById('release-status').textContent.includes('已找到公开发行的安装程序'));
-    assert.match(await page.locator('#package-download').getAttribute('href'),/PulseLink-Setup\\.exe$/);
+    assert.match(await page.locator('#package-download').getAttribute('href'),/PulseLink-Setup\.exe$/);
     await page.locator('.nav-links a[href="#connections"]').click();
     await page.waitForFunction(()=>document.documentElement.classList.contains('is-transitioning'));
     const positions=await page.evaluate(()=>new Promise(resolve=>{const points=[];const started=performance.now();function tick(){points.push(scrollY);if(performance.now()-started<1150)requestAnimationFrame(tick);else resolve(points);}requestAnimationFrame(tick);}));

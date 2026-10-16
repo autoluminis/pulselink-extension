@@ -41,9 +41,9 @@ Pages 未配置时，检查仍执行，部署明确跳过，不会将跳过报�
 
 ## 下载源与首次安装 / OTA
 
-`release-config.json` 指定公开仓库、`release` 分支、`stable` 通道及 `win-x64` 平台。网页在进入下载章节时读取；用户可重新检查。外域 GitHub 请求不带登录凭据，同源配置保留正常会话，兼容私有审核环境与公开 Pages。
+`release-config.json` 指定公开仓库、`release` 分支、`stable` 通道及 `win-x64` 平台。网页初次加载时立即读取；用户可重新检查。外域 GitHub 请求不带登录凭据，同源配置保留正常会话，兼容私有审核环境与公开 Pages。
 
-- **首次安装**：只选正式、非预发布 Release 中 uploaded 的 `PulseLink-Setup.exe`。标签支持 `setup-stable-win-x64-{version}` 或 `v{version}`，版本按数值排序；可附同名 `.sha256` 文件。此命名是官网识别约定，不会自动创建安装程序或改动产品打包器。
+- **首次安装**：只选正式、非预发布 Release 中 uploaded 的 `PulseLink-Setup.exe`。标签支持 `setup-stable-win-x64-{version}`、`ota-stable-win-x64-{version}` 或 `v{version}`（仅当 Release 确实包含独立上传的安装 EXE 时），版本按数值排序；可附同名 `.sha256` 文件。此命名是官网识别约定，不会自动创建安装程序或改动产品打包器。
 - **OTA**：从 `ota/stable/win-x64/latest.release.json` 读取稳定通道，并定位同仓库的 `ota-stable-win-x64-{version}` / `PulseLink-{version}-win-x64.ota.zip`。不使用全局 releases/latest，不把 OTA 当作首次安装 EXE。
 - API 可用时交叉核对资产；API 受限时仍可从有效官方稳定索引导出同一受控地址。索引不可读或字段不合法时停止提供 OTA 链接。签名、完整文件摘要、最低版本与平台兼容性最终由已安装客户端检查。
 - 官网不扫描访问者电脑，也不执行更新。用户选择下载用途，客户端决定适用性。

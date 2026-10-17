@@ -14,7 +14,7 @@ try {
     New-Item -ItemType Directory -Force "$temporaryRoot/incoming", "$temporaryRoot/providers", "$temporaryRoot/extensions/providers/autoluminis", "$temporaryRoot/notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1" | Out-Null
     # 扩展 plugins/ 不存在，模拟 Git 检出删除唯一测试插件后的实际目录结构。
     [IO.File]::WriteAllText("$temporaryRoot/extensions/providers/autoluminis/index.json", '{"plugins":[{"pluginId":"example.demo"}]}')
-    [IO.File]::WriteAllText("$temporaryRoot/providers/autoluminis.json", '{"schemaVersion":1,"providerId":"autoluminis","displayName":"Autoluminis","publisherKeyIds":["cleanup-test-key"]}')
+    [IO.File]::WriteAllText("$temporaryRoot/providers/autoluminis.json", '{"schemaVersion":1,"providerId":"autoluminis","displayName":"PulseLink 官方","publisherKeyIds":["cleanup-test-key"]}')
     $archivePath = "$temporaryRoot/notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1/package.zip"
     [IO.File]::WriteAllBytes($archivePath, [Text.Encoding]::UTF8.GetBytes('signed-archive-fixture'))
     $archiveSignature = $key.SignData([IO.File]::ReadAllBytes($archivePath), [Security.Cryptography.HashAlgorithmName]::SHA256, [Security.Cryptography.DSASignatureFormat]::IeeeP1363FixedFieldConcatenation)
@@ -38,11 +38,11 @@ try {
         }
         marketplace = @{
             providerId = 'autoluminis'
-            providerName = 'Autoluminis'
+            providerName = '插件内部错误名称，不应覆盖官方发行方'
             summary = '通知插件'
             tags = @('notification', 'wxpusher')
-            developers = @(@{ id = 'autoluminis'; displayName = 'Autoluminis'; url = 'https://example.com' })
-            maintainers = @(@{ id = 'autoluminis'; displayName = 'Autoluminis'; url = 'https://example.com' })
+            developers = @(@{ id = 'autoluminis'; displayName = '插件内部开发者'; url = 'https://example.com' })
+            maintainers = @(@{ id = 'autoluminis'; displayName = '插件内部维护者'; url = 'https://example.com' })
             sourceUrl = 'https://example.com/source'
         }
     }
@@ -66,7 +66,7 @@ try {
     $provider = Get-Content "$temporaryRoot/notifications/providers/autoluminis/index.json" -Raw | ConvertFrom-Json -AsHashtable
     Assert ($category.catalogId -eq 'notifications' -and $category.packageKind -eq 'notification-plugin') '分类目录必须带有宿主要求的 catalogId。'
     Assert ($provider.publisherKeyIds -contains 'cleanup-test-key') '发行方目录必须携带受信任的发布密钥列表。'
-    Assert ($notification.providerId -eq 'autoluminis' -and $notification.providerName -eq 'Autoluminis' -and $notification.name -eq 'WxPusher 通知') '插件目录缺少发行方或插件展示信息。'
+    Assert ($notification.providerId -eq 'autoluminis' -and $notification.providerName -eq 'PulseLink 官方' -and $notification.name -eq 'WxPusher 通知') '插件目录必须使用受信任的官方发行方名称，不得被插件内部名称覆盖。'
     Assert ($notification.developers.Count -eq 1 -and $notification.tags.Count -eq 2) '插件目录应保留 marketplace 元数据。'
     $version = $notification.versions[0]
     Assert ($version.hostCompatibility.minimumVersion -eq '26.09.14.002') '版本目录必须包含宿主兼容范围。'

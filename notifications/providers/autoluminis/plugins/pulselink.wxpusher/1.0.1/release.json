@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "packageKind": "notification-plugin",
   "pluginId": "pulselink.wxpusher",
-  "name": "WxPusher \u901A\u77E5",
-  "description": "\u901A\u8FC7 WxPusher \u5411\u5DF2\u914D\u7F6E\u7684\u63A5\u6536\u8005\u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+  "name": "WxPusher 通知",
+  "description": "通过 WxPusher 向已配置的接收者发送 PulseLink 报警和通知。",
   "version": "1.0.1",
-  "releasedAt": "2026-10-08T05:56:53.5003226\u002B00:00",
+  "releasedAt": "2026-10-08T13:56:53.5003226+08:00",
   "releaseNotes": "",
   "isPrerelease": false,
   "hostCompatibility": {
@@ -30,20 +30,20 @@
   "marketplace": {
     "schemaVersion": 1,
     "providerId": "autoluminis",
-    "providerName": "Autoluminis",
+    "providerName": "PulseLink 官方",
     "developers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ],
-    "summary": "\u901A\u8FC7 WxPusher \u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+    "summary": "通过 WxPusher 发送 PulseLink 报警和通知。",
     "maintainers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ],
     "license": "MIT",

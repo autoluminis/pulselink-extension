@@ -31,7 +31,7 @@ function latestStable(plugin, provider) {
   requireValue(typeof plugin.name === 'string' && plugin.name.trim() && plugin.name.length <= 120, 'Invalid plugin name');
   const description = plugin.summary || plugin.description || '';
   requireValue(typeof description === 'string' && description.length <= 2000, 'Invalid plugin description');
-  return {providerId:provider.providerId, providerName:typeof plugin.providerName === 'string' ? plugin.providerName : provider.providerId, pluginId:plugin.pluginId, name:plugin.name, description, version:version.version, minimumHostVersion:compatibility.minimumVersion, maximumHostVersionExclusive:compatibility.maximumVersionExclusive || null, packagePath:path, packageSize:pkg.sizeBytes, documentationUrl:httpsUrl(plugin.documentationUrl), sourceUrl:httpsUrl(plugin.sourceUrl), releasedAt:version.releasedAt || null};
+  return {providerId:provider.providerId, providerName:typeof provider.providerName === 'string' && provider.providerName.trim() ? provider.providerName : provider.officialDisplayName || provider.providerId, pluginId:plugin.pluginId, name:plugin.name, description, version:version.version, minimumHostVersion:compatibility.minimumVersion, maximumHostVersionExclusive:compatibility.maximumVersionExclusive || null, packagePath:path, packageSize:pkg.sizeBytes, documentationUrl:httpsUrl(plugin.documentationUrl), sourceUrl:httpsUrl(plugin.sourceUrl), releasedAt:version.releasedAt || null};
 }
 /** Verify all directory signatures and parent hashes before showing official-provider metadata. */
 export async function readOfficialCatalog({catalogConfig, readBytes, cryptoProvider = globalThis.crypto}) {
@@ -75,7 +75,9 @@ export async function readOfficialCatalog({catalogConfig, readBytes, cryptoProvi
     const expected = `notifications/providers/${entry.providerId}/index.json`;
     requireValue(entry.indexPath === expected, 'Provider path mismatch');
     const provider = await signedIndex(expected, entry.indexSha256);
-    requireValue(provider.schemaVersion === 1 && provider.providerId === entry.providerId && provider.packageKind === 'notification-plugin' && Array.isArray(provider.publisherKeyIds) && provider.publisherKeyIds.length > 0 && provider.publisherKeyIds.every(k => typeof k === 'string') && Array.isArray(provider.plugins) && provider.plugins.length <= 100, 'Invalid provider metadata');
+    const officialDisplayName = catalogConfig.officialProviderNames?.[provider.providerId];
+    if (!provider.providerName && typeof officialDisplayName === 'string' && officialDisplayName.trim()) provider.officialDisplayName = officialDisplayName;
+    requireValue(provider.schemaVersion === 1 && provider.providerId === entry.providerId && provider.packageKind === 'notification-plugin' && (typeof provider.providerName === 'string' && provider.providerName.trim() || typeof provider.officialDisplayName === 'string' && provider.officialDisplayName.trim()) && Array.isArray(provider.publisherKeyIds) && provider.publisherKeyIds.length > 0 && provider.publisherKeyIds.every(k => typeof k === 'string') && Array.isArray(provider.plugins) && provider.plugins.length <= 100, 'Invalid provider metadata');
     const plugins = await Promise.all(provider.plugins.map(async record => {
       requireValue(typeof record.pluginId === 'string' && ID.test(record.pluginId) && !pluginIds.has(record.pluginId), 'Duplicate plugin identity');
       pluginIds.add(record.pluginId);

@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "packageKind": "notification-plugin",
   "pluginId": "pulselink.wxpusher",
-  "name": "WxPusher \u901A\u77E5",
-  "description": "\u901A\u8FC7 WxPusher \u5411\u5DF2\u914D\u7F6E\u7684\u63A5\u6536\u8005\u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+  "name": "WxPusher 通知",
+  "description": "通过 WxPusher 向已配置的接收者发送 PulseLink 报警和通知。",
   "version": "1.0.2",
-  "releasedAt": "2026-10-09T02:01:04.6815149\u002B00:00",
+  "releasedAt": "2026-10-09T10:01:04.6815149+08:00",
   "releaseNotes": "",
   "isPrerelease": false,
   "hostCompatibility": {
@@ -25,17 +25,17 @@
     "sha256": "1318a7b8b60aa205275c3d2e7c0489181917535798c79c2aff4268b66c2a3f15",
     "signatureKeyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
     "signatureAlgorithm": "ECDSA-P256-SHA256",
-    "signature": "37zluAVduBiCMO6pts\u002BTaX3QYnKKxExuI1o911NC\u002Bh7Vb/pCOiafTd\u002Bu5fAAxpjNgg6WvHq8\u002BZMQOYgamaD4Sw=="
+    "signature": "37zluAVduBiCMO6pts+TaX3QYnKKxExuI1o911NC+h7Vb/pCOiafTd+u5fAAxpjNgg6WvHq8+ZMQOYgamaD4Sw=="
   },
   "marketplace": {
     "schemaVersion": 1,
     "providerId": "autoluminis",
-    "summary": "\u901A\u8FC7 WxPusher \u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+    "summary": "通过 WxPusher 发送 PulseLink 报警和通知。",
     "maintainers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ],
     "license": "MIT",
@@ -51,12 +51,12 @@
       "wechat",
       "wxpusher"
     ],
-    "providerName": "Autoluminis",
+    "providerName": "PulseLink 官方",
     "developers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ]
   }

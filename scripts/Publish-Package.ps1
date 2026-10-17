@@ -85,6 +85,7 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
         $provider = $_
         $providerMetadata = Read-Json "$Root/providers/$($provider.Name).json"
         Assert ($providerMetadata.providerId -eq $provider.Name) "发行方 $($provider.Name) 配置与目录不一致。"
+        Assert (-not [string]::IsNullOrWhiteSpace([string]$providerMetadata.displayName)) "发行方 $($provider.Name) 缺少受信任展示名称。"
         $publisherKeyIds = @($providerMetadata.publisherKeyIds)
         Assert ($publisherKeyIds.Count -gt 0 -and @($publisherKeyIds | Where-Object { [string]::IsNullOrWhiteSpace([string]$_) }).Count -eq 0) "发行方 $($provider.Name) 未声明发布密钥。"
 
@@ -98,7 +99,7 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
                 $release = Read-Json "$($versionDirectory.FullName)/release.json"
                 Assert ($release.schemaVersion -eq 1 -and $release.packageKind -eq $PackageKind -and $release.pluginId -eq $plugin.Name -and $release.version -eq $versionDirectory.Name) "插件 $($plugin.Name) 的发布描述与目录不一致。"
                 Assert ($release.marketplace.providerId -eq $provider.Name) "插件 $($plugin.Name) 的发行方不匹配。"
-                Assert (-not [string]::IsNullOrWhiteSpace([string]$release.name) -and -not [string]::IsNullOrWhiteSpace([string]$release.marketplace.providerName)) "插件 $($plugin.Name) 缺少商城展示信息。"
+                Assert (-not [string]::IsNullOrWhiteSpace([string]$release.name)) "插件 $($plugin.Name) 缺少商城展示信息。"
                 Assert (-not [string]::IsNullOrWhiteSpace([string]$release.hostCompatibility.minimumVersion)) "插件 $($plugin.Name) 缺少宿主兼容版本。"
                 Assert ($release.package.sizeBytes -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$release.package.sha256)) "插件 $($plugin.Name) 缺少包摘要或大小。"
                 foreach ($field in @('signatureKeyId', 'signatureAlgorithm', 'signature')) {
@@ -134,7 +135,7 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
                 schemaVersion = 1
                 packageKind = $PackageKind
                 providerId = $provider.Name
-                providerName = $metadata.providerName
+                providerName = $providerMetadata.displayName
                 pluginId = $plugin.Name
                 name = $latestRelease.name
                 description = $latestRelease.description
@@ -150,6 +151,7 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
             schemaVersion = 1
             providerId = $provider.Name
             packageKind = $PackageKind
+            providerName = $providerMetadata.displayName
             publisherKeyIds = @($publisherKeyIds)
             plugins = @($pluginRows | Sort-Object pluginId)
         }

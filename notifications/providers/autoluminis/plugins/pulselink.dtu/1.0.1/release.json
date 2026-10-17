@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "packageKind": "notification-plugin",
   "pluginId": "pulselink.dtu",
-  "name": "DTU \u901A\u77E5",
-  "description": "\u901A\u8FC7 DTU \u7F51\u5173\u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+  "name": "DTU 通知",
+  "description": "通过 DTU 网关发送 PulseLink 报警和通知。",
   "version": "1.0.1",
-  "releasedAt": "2026-10-09T02:33:47.7244654\u002B00:00",
+  "releasedAt": "2026-10-09T10:33:47.7244654+08:00",
   "releaseNotes": "",
   "isPrerelease": false,
   "hostCompatibility": {
@@ -25,25 +25,25 @@
     "sha256": "800c00fc3a45fa9b07f0c5ab9689b533ab2e930b1c8f6631c4f6791b43d6647c",
     "signatureKeyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
     "signatureAlgorithm": "ECDSA-P256-SHA256",
-    "signature": "7ABCUKsysseyLzBotSiEIOy\u002Ble3p9KsuT6Gq9zA8waRwJi/qSRYEtbBfpWgTAAcp2Fppd0aBzcQdsXjfuatT/g=="
+    "signature": "7ABCUKsysseyLzBotSiEIOy+le3p9KsuT6Gq9zA8waRwJi/qSRYEtbBfpWgTAAcp2Fppd0aBzcQdsXjfuatT/g=="
   },
   "marketplace": {
     "schemaVersion": 1,
     "providerId": "autoluminis",
-    "providerName": "Autoluminis",
+    "providerName": "PulseLink 官方",
     "developers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ],
-    "summary": "\u901A\u8FC7 DTU \u7F51\u5173\u53D1\u9001 PulseLink \u62A5\u8B66\u548C\u901A\u77E5\u3002",
+    "summary": "通过 DTU 网关发送 PulseLink 报警和通知。",
     "maintainers": [
       {
         "id": "autoluminis",
-        "displayName": "Autoluminis",
-        "url": "https://github.com/autoluminis"
+        "displayName": "PulseLink 官方",
+        "url": "https://github.com/autoluminis/pulselink-extension"
       }
     ],
     "license": "MIT",

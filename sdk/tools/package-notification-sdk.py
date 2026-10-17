@@ -10,7 +10,7 @@ actual = {p.relative_to(source / 'src').as_posix(): hashlib.sha256(p.read_bytes(
           for p in (source / 'src').rglob('*.cs') if not any(part in ('bin', 'obj') for part in p.parts)}
 if actual != manifest['files']:
     raise SystemExit('SDK contract sources differ from contract-manifest.json; verify host compatibility before packaging.')
-output = root / 'website/assets/PulseLink-Notification-SDK-26.10.15.003.zip'
+output = root / 'website/assets/PulseLink-Notification-SDK-26.10.17.001.zip'
 (output.parent / 'PulseLink-Notification-Development-Guide.md').write_bytes((source / 'DEVELOPING.md').read_bytes().replace(b'\r\n', b'\n'))
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_STORED) as archive:
     for path in sorted(source.rglob('*'), key=lambda path: path.relative_to(source).as_posix()):

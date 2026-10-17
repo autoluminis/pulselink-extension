@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 SDK = ROOT / 'sdk/notification'
-ZIP = ROOT / 'website/assets/PulseLink-Notification-SDK-26.10.15.003.zip'
+ZIP = ROOT / 'website/assets/PulseLink-Notification-SDK-26.10.17.001.zip'
 
 
 class SdkArchiveTests(unittest.TestCase):

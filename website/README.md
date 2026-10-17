@@ -76,6 +76,6 @@ python sdk/tools/package-notification-sdk.py
 python sdk/tools/test-notification-sdk.py
 ```
 
-打包器先核对冻结契约摘要，统一文本换行并排除构建产物，再同步指导书、ZIP 和 SHA-256。契约文件变化须先核对宿主兼容性，不能只更新摘要跳过兼容验证。SDK 修订内容与契约版本分别记录，当前契约仍为 26.10.15.003。
+打包器先核对冻结契约摘要，统一文本换行并排除构建产物，再同步指导书、ZIP 和 SHA-256。契约文件变化须先核对宿主兼容性，不能只更新摘要跳过兼容验证。SDK 修订内容与契约版本分别记录，当前契约仍为 26.10.17.001。
 
 CI 另外从 ZIP 解压构建示例并运行内存 HTTP 回归，包含 10 秒发送超时。官网测试遍历所有页面本地资源与锚点，并检查文档按钮对比度、SDK 实际下载及固定页眉下的目录跳转。Windows 本地也可使用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指向 Edge；`WEBSITE_SCREENSHOT_DIR` 可选择保存桌面和手机文档截图。

@@ -1,5 +1,5 @@
 {
-  "sdkVersion": "26.10.15.003",
+  "sdkVersion": "26.10.17.001",
   "targetFramework": "net10.0",
   "files": {
     "IPulseLinkPlugin.cs": "0f1aa2c9bb6e0fb4aaf21be9386be4e24634bc25581c23a2a2d494872520f0c2",

@@ -79,7 +79,7 @@ function Remove-ExpiredPluginVersions([string] $PluginRoot) {
         Write-Host "已清理过期版本：$($expired.Name)"
     }
 }
-function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKind) {
+function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKind, [hashtable] $AuthorizedKeys) {
     $providerRows = @()
     Get-ChildItem -LiteralPath "$KindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
         $provider = $_
@@ -110,6 +110,7 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
                 Assert (Test-Path -LiteralPath $archivePath -PathType Leaf) "插件 $($plugin.Name) 缺少 package.zip。"
                 Assert ((Get-Item -LiteralPath $archivePath).Length -eq $release.package.sizeBytes) "插件 $($plugin.Name) 的包大小不匹配。"
                 Assert ((Get-Sha256 $archivePath) -eq $release.package.sha256) "插件 $($plugin.Name) 的包摘要不匹配。"
+                Test-ArchiveSignature $archivePath $release.package $AuthorizedKeys
                 $archiveRelativePath = ($archivePath.Substring($Root.Length + 1) -replace '\\','/')
                 $versions += [ordered]@{
                     version = $release.version
@@ -168,17 +169,46 @@ function Rebuild-Indexes([string] $Root, [string] $KindRoot, [string] $PackageKi
     }
     $path = "$KindRoot/index.json"; Write-Utf8Json $path $category; Sign-Index $path
 }
+function Test-PublishedCatalog([string] $Root, [hashtable] $AuthorizedKeys) {
+    foreach ($kind in @(@{ Root = 'extensions'; PackageKind = 'extension' }, @{ Root = 'notifications'; PackageKind = 'notification-plugin' })) {
+        $kindRoot = Join-Path $Root $kind.Root
+        if (-not (Test-Path -LiteralPath $kindRoot)) { continue }
+        Get-ChildItem -LiteralPath "$kindRoot/providers" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $provider = $_
+            $providerMetadata = Read-Json (Join-Path $Root "providers/$($provider.Name).json")
+            Assert ($providerMetadata.providerId -eq $provider.Name) "发行方 $($provider.Name) 配置与目录不一致。"
+            $publisherKeyIds = @($providerMetadata.publisherKeyIds)
+            Get-ChildItem -LiteralPath "$($provider.FullName)/plugins" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+                $plugin = $_
+                Get-ChildItem -LiteralPath $plugin.FullName -Directory | ForEach-Object {
+                    $versionDirectory = $_
+                    $release = Read-Json (Join-Path $versionDirectory.FullName 'release.json')
+                    Assert ($release.schemaVersion -eq 1 -and $release.packageKind -eq $kind.PackageKind -and $release.pluginId -eq $plugin.Name -and $release.version -eq $versionDirectory.Name) "插件 $($plugin.Name) 的发布描述与目录不一致。"
+                    Assert ($release.marketplace.providerId -eq $provider.Name) "插件 $($plugin.Name) 的发行方不匹配。"
+                    $archivePath = Join-Path $versionDirectory.FullName 'package.zip'
+                    Assert (Test-Path -LiteralPath $archivePath -PathType Leaf) "插件 $($plugin.Name) 缺少 package.zip。"
+                    Assert ((Get-Item -LiteralPath $archivePath).Length -eq $release.package.sizeBytes) "插件 $($plugin.Name) 的包大小不匹配。"
+                    Assert ((Get-Sha256 $archivePath) -eq $release.package.sha256) "插件 $($plugin.Name) 的包摘要不匹配。"
+                    Assert ($publisherKeyIds -contains $release.package.signatureKeyId) "插件 $($plugin.Name) 的包签名密钥未获发行方授权。"
+                    Test-ArchiveSignature $archivePath $release.package $AuthorizedKeys
+                }
+            }
+        }
+    }
+}
+
 Assert ($ValidateOnly -xor $Publish) '必须二选一指定 -ValidateOnly 或 -Publish。'
 $root = [IO.Path]::GetFullPath($RepositoryRoot)
 $incoming = [IO.Path]::GetFullPath($IncomingDirectory, $root)
 $zips = @(Get-ChildItem -LiteralPath $incoming -Filter '*.zip' -File)
 $releases = @(Get-ChildItem -LiteralPath $incoming -Filter '*.release.json' -File)
 if ($zips.Count -eq 0 -and $AllowEmpty) {
-    if ($ValidateOnly) { exit 0 }
+    $keys = Get-PublisherKeys -LegacyKeysJson $env:PULSELINK_PROVIDER_KEYS_JSON -OfficialKeyId $env:PULSELINK_OFFICIAL_PUBLISHER_KEY_ID -OfficialPublicKeyPem $env:PULSELINK_OFFICIAL_PUBLISHER_PUBLIC_KEY_PEM
+    if ($ValidateOnly) { Test-PublishedCatalog $root $keys; Write-Host '已验证现有发布包的摘要、授权和原始 ZIP 签名。'; exit 0 }
     Assert (-not [string]::IsNullOrWhiteSpace($env:PULSELINK_CATALOG_PRIVATE_KEY_PEM)) '重建索引必须配置 PULSELINK_CATALOG_PRIVATE_KEY_PEM。'
     foreach ($kind in @(@{ Root = 'extensions'; PackageKind = 'extension' }, @{ Root = 'notifications'; PackageKind = 'notification-plugin' })) {
         $kindRoot = "$root/$($kind.Root)"
-        if (Test-Path -LiteralPath $kindRoot) { Rebuild-Indexes $root $kindRoot $kind.PackageKind }
+        if (Test-Path -LiteralPath $kindRoot) { Rebuild-Indexes $root $kindRoot $kind.PackageKind $keys }
     }
     exit 0
 }
@@ -211,5 +241,5 @@ Copy-Item -LiteralPath $zip.FullName -Destination "$target/package.zip"
 Copy-Item -LiteralPath $releasePath -Destination "$target/release.json"
 Remove-Item -LiteralPath $zip.FullName, $releasePath
 Remove-ExpiredPluginVersions "$root/$targetKind/providers/$providerId/plugins/$($release.pluginId)"
-Rebuild-Indexes $root "$root/$targetKind" $release.packageKind
+Rebuild-Indexes $root "$root/$targetKind" $release.packageKind $keys
 Write-Host "已发布：$($release.pluginId) $($release.version)"

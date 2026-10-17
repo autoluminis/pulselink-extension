@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "algorithm": "ECDSA-P256-SHA256",
   "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
-  "signature": "k1lLpmjuVN/j7UrIzdG2YfRaU9JsDwysS+DC4aOY0JG9/Vqvj7LOweov1QFEW1OW7ySA/xJiUbmGkokZn0N74g=="
+  "signature": "kF4fSC/LLYJHke2hOQGFQ6o+18S+SlOsSZbojwHpzlBCB5Csd+zCnnyfEzA7+xLTVgk4WUSfep4CpRL/K9a7Bw=="
 }

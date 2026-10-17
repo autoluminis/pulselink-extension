@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "providerId": "autoluminis",
   "packageKind": "extension",
+  "providerName": "PulseLink 官方",
   "publisherKeyIds": [
     "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C"
   ],

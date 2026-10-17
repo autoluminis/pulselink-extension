@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "packageKind": "notification-plugin",
   "providerId": "autoluminis",
-  "providerName": "Autoluminis",
+  "providerName": "PulseLink 官方",
   "pluginId": "pulselink.dtu",
   "name": "DTU 通知",
   "description": "通过 DTU 网关发送 PulseLink 报警和通知。",
@@ -30,8 +30,8 @@
   "developers": [
     {
       "id": "autoluminis",
-      "displayName": "Autoluminis",
-      "url": "https://github.com/autoluminis"
+      "displayName": "PulseLink 官方",
+      "url": "https://github.com/autoluminis/pulselink-extension"
     }
   ],
   "tags": [
@@ -46,8 +46,8 @@
   "maintainers": [
     {
       "id": "autoluminis",
-      "displayName": "Autoluminis",
-      "url": "https://github.com/autoluminis"
+      "displayName": "PulseLink 官方",
+      "url": "https://github.com/autoluminis/pulselink-extension"
     }
   ],
   "screenshots": []

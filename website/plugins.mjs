@@ -5,6 +5,7 @@ const list = document.getElementById('plugin-catalog-list');
 const status = document.getElementById('plugin-catalog-status');
 const refresh = document.getElementById('refresh-plugins');
 const tabs = [...document.querySelectorAll('[data-plugin-tab]')];
+const sdkKitUrl = 'https://github.com/autoluminis/pulselink-extension/releases/download/notification-sdk-v26.10.17.001/PulseLink.NotificationPluginSdk-26.10.17.001-win-x64.zip';
 let loaded = false;
 let loading = false;
 async function getBytes(url) {
@@ -21,6 +22,12 @@ async function getBytes(url) {
 async function getJson(url) { return JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(await getBytes(url))); }
 function node(tag, text, className) { const element = document.createElement(tag); if (text) element.textContent = text; if (className) element.className = className; return element; }
 function externalLink(label, href, className) { const a = node('a', label, className); a.href = href; a.target = '_blank'; a.rel = 'noopener'; return a; }
+const sdkLinks = document.querySelector('.sdk-links');
+if (sdkLinks && !sdkLinks.querySelector('[data-full-sdk]')) {
+  const link = externalLink('下载完整 SDK 套件（NuGet / 模板 / 打包器）↓', sdkKitUrl, 'text-link');
+  link.dataset.fullSdk = 'true';
+  sdkLinks.append(link);
+}
 function renderItem(item, base, documentationPaths = {}) {
   const card = node('article', null, 'catalog-plugin');
   const top = node('div', null, 'catalog-plugin-top');

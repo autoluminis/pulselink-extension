@@ -24,6 +24,7 @@ function node(tag, text, className) { const element = document.createElement(tag
 function externalLink(label, href, className) { const a = node('a', label, className); a.href = href; a.target = '_blank'; a.rel = 'noopener'; return a; }
 const sdkLinks = document.querySelector('.sdk-links');
 if (sdkLinks && !sdkLinks.querySelector('[data-full-sdk]')) {
+  sdkLinks.querySelectorAll('a[href*="PulseLink-Notification-SDK-"]').forEach(link => link.remove());
   const link = externalLink('下载完整 SDK 套件（NuGet / 模板 / 打包器）↓', sdkKitUrl, 'text-link');
   link.dataset.fullSdk = 'true';
   sdkLinks.append(link);

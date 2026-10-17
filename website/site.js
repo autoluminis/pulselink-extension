@@ -153,3 +153,5 @@ slides[initialIndex].scrollIntoView({behavior:'instant', block:'start'});
 mark(initialIndex);
 
 document.addEventListener('pulselink:modal-open', cancelAnimation);
+const manualMeta = document.querySelector('.guide-meta');
+if (manualMeta) manualMeta.textContent = '简体中文 · 41 页 · PDF · 更新于 2026-10-17';

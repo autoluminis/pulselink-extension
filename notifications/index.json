@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "catalogId": "notifications",
   "packageKind": "notification-plugin",
-  "generatedAt": "2026-10-17T04:29:38.0404284+00:00",
+  "generatedAt": "2026-10-17T04:42:12.6872462+00:00",
   "providers": [
     {
       "providerId": "autoluminis",

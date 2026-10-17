@@ -5,7 +5,7 @@ const list = document.getElementById('plugin-catalog-list');
 const status = document.getElementById('plugin-catalog-status');
 const refresh = document.getElementById('refresh-plugins');
 const tabs = [...document.querySelectorAll('[data-plugin-tab]')];
-const sdkKitUrl = 'https://github.com/autoluminis/pulselink-extension/releases/download/notification-sdk-v26.10.17.001/PulseLink.NotificationPluginSdk-26.10.17.001-win-x64.zip';
+const sdkKitUrl = 'https://github.com/autoluminis/pulselink-extension/releases/download/notification-sdk-v26.10.17.001/PulseLink.NotificationPluginSdk-26.10.17.001-plugin-only-win-x64.zip';
 let loaded = false;
 let loading = false;
 async function getBytes(url) {

@@ -29,6 +29,10 @@ dotnet test .\Contoso.PulseLink.Notifications --configuration Release --no-resto
 
 `pluginId` 一经发布不得更改。建议使用反向域名或组织前缀的小写稳定标识。项目、帮助和发行方 URL 必须替换模板占位值。
 
+模板和 WebhookSample 只演示契约与打包，不执行网络投递；未接入提供方时会明确拒绝发送，不会返回已受理。真实 HTTP 投递、取消及运行时集成可参考套件内的 WxPusher 示例。
+
+从源码构建 SDK 套件时，先在隔离 Python 环境安装 `scripts/requirements-plugin-sdk.txt`，再执行 `scripts/Build-NotificationPluginSdk.ps1 -PythonExecutable <python路径>`。脚本会从套件内同版本正文生成 PDF，不需要预先准备 `output/` 文件。端到端脚本必须在所选 RID 对应的系统和架构执行；Linux 解压工具 ZIP 后应恢复 `pulselink-notification-packager` 的执行权限。
+
 ## 3. 公共契约和生命周期
 
 入口实现 `INotificationChannelPlugin`，必须有公开无参构造函数；`Id`、`Version` 必须与 `plugin.json` 一致。`CreateChannels` 返回稳定的渠道集合，渠道 `Key` 在插件内唯一。
@@ -86,6 +90,17 @@ PulseLink 使用至少一次投递尝试语义，不承诺 exactly-once。外部
 
 开发、CI、正式发布使用不同密钥。私钥不得进入源码、模板、构建日志或插件 ZIP。开发密钥只用于本地/隔离环境，并通过显式测试信任配置授权；正式包必须使用已经登记并获插件范围授权的发行方密钥。
 
+SDK 打包器也提供插件签名密钥的生成入口。它只生成 ECDSA 插件包签名密钥，不生成 Windows 安装包代码签名证书，也不会自动修改宿主信任注册表：
+
+```powershell
+pulselink-notification-packager keygen `
+  --private-key C:\secure\contoso-release.pem `
+  --public-key C:\secure\contoso-release-public.pem `
+  --key-id contoso-release-2026
+```
+
+交互式入口中的“插件签名密钥管理”可选择已有密钥、导出加密迁移备份或恢复备份。私钥和备份密码必须分开保管；公钥与 KeyId 仍需由宿主管理员登记到 `PluginSigningKeys` 后才能用于正式安装。
+
 ```powershell
 pulselink-packager plugin-pack `
   --project .\src\Contoso.PulseLink.Notifications\Contoso.PulseLink.Notifications.csproj `
@@ -123,6 +138,8 @@ PR 创建或流水线调度成功不等于发布成功；最终以远端签名�
 SDK 套件本身的发布入口是 `.github/workflows/notification-plugin-sdk-release.yml`。先以 `plugin-sdk-v<productVersion>` tag 或手动运行执行验证；工作流完成模板、签名、验包、宿主安装/升级/回滚/卸载和 SHA-256 门禁后，才可在 `notification-plugin-sdk-release` 环境批准发布 GitHub Release 或 NuGet。正式发布不读取插件私钥，NuGet 发布需要环境密钥 `NUGET_API_KEY`。
 
 ## 12. 发布检查表
+
+公开 SDK 套件位于 `autoluminis/pulselink-extension` 的 `notification-sdk-v<产品版本>` Release。开发仓库负责构建、端到端验证及生成摘要，再由受保护环境中的跨仓库发布令牌上传；同版本不可覆盖。开发仓库的 `plugin-sdk-v<产品版本>` 仅为构建触发 tag。
 
 - [ ] SDK、模板、打包器和兼容矩阵版本一致
 - [ ] 清单、入口和程序集版本一致

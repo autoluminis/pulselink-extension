@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": 2,
+  "sdkPackageId": "PulseLink.Plugin.Abstractions",
+  "productVersion": "26.10.17.001",
+  "sdkPackageVersion": "26.10.17.1",
+  "minimumHostVersion": "26.09.14.002",
+  "maximumHostVersionExclusive": null,
+  "targetFramework": "net10.0",
+  "manifestVersions": [2],
+  "supportStatus": "stable",
+  "compatibilityPolicy": {
+    "sameApiVersion": "Host updates preserve source and binary compatibility for documented public contracts unless a security correction requires an announced exception.",
+    "newOptionalMembers": "New interface capabilities use optional interfaces or default interface members where possible.",
+    "breakingChanges": "Breaking contract or manifest changes require a new apiVersion and plugin rebuild.",
+    "hostRange": "The package manifest minimumHostVersion and optional maximumHostVersionExclusive are authoritative for installation."
+  }
+}

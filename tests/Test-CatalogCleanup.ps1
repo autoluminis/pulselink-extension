@@ -9,6 +9,7 @@ $key = [Security.Cryptography.ECDsa]::Create([Security.Cryptography.ECCurve+Name
 $originalPrivateKey = $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM
 $originalPassword = $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD
 $originalKeyId = $env:PULSELINK_CATALOG_KEY_ID
+$originalProviderKeys = $env:PULSELINK_PROVIDER_KEYS_JSON
 function Assert([bool] $Condition, [string] $Message) { if (-not $Condition) { throw $Message } }
 try {
     New-Item -ItemType Directory -Force "$temporaryRoot/incoming", "$temporaryRoot/providers", "$temporaryRoot/extensions/providers/autoluminis", "$temporaryRoot/notifications/providers/autoluminis/plugins/pulselink.wxpusher/1.0.1" | Out-Null
@@ -50,8 +51,11 @@ try {
     [IO.File]::WriteAllText("$temporaryRoot/notifications/providers/autoluminis/plugins/pulselink.wxpusher/index.json", '{"versions":[{"version":"1.0.0"}]}')
     $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM = $key.ExportPkcs8PrivateKeyPem()
     $env:PULSELINK_CATALOG_KEY_ID = 'cleanup-test-key'
+    $env:PULSELINK_PROVIDER_KEYS_JSON = (@{ 'cleanup-test-key' = $key.ExportSubjectPublicKeyInfoPem() } | ConvertTo-Json -Compress)
     & pwsh -NoProfile -File $publisher -IncomingDirectory incoming -RepositoryRoot $temporaryRoot -Publish -AllowEmpty
     Assert ($LASTEXITCODE -eq 0) '目录重建失败。'
+    & pwsh -NoProfile -File $publisher -IncomingDirectory incoming -RepositoryRoot $temporaryRoot -ValidateOnly -AllowEmpty
+    Assert ($LASTEXITCODE -eq 0) '空发布验证未检查现有包签名。'
     # 使用临时密码加密临时密钥，验证与正式加密私钥相同的发布路径。
     $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD = [Guid]::NewGuid().ToString('N')
     $parameters = [Security.Cryptography.PbeParameters]::new([Security.Cryptography.PbeEncryptionAlgorithm]::Aes256Cbc, [Security.Cryptography.HashAlgorithmName]::SHA256, 10000)
@@ -96,6 +100,7 @@ try {
     $env:PULSELINK_CATALOG_PRIVATE_KEY_PEM = $originalPrivateKey
     $env:PULSELINK_CATALOG_PRIVATE_KEY_PASSWORD = $originalPassword
     $env:PULSELINK_CATALOG_KEY_ID = $originalKeyId
+    $env:PULSELINK_PROVIDER_KEYS_JSON = $originalProviderKeys
     $key.Dispose()
     if (Test-Path -LiteralPath $temporaryRoot) { Remove-Item -LiteralPath $temporaryRoot -Recurse -Force }
 }

@@ -1,120 +1,136 @@
-# 通知插件开发指导书
+# PulseLink 通知插件开发、测试与发布指导书
 
-适用 SDK / 宿主：26.10.15.003；通知 API：2；开发环境：.NET 10 SDK。修订日期：2026-10-16。
-本次完善示例、交付模板和验证工具，公共契约版本保持不变；其他宿主版本必须重新验证，不能仅凭 apiVersion 相同推断二进制兼容。
+- 适用 SDK：`PulseLink.Plugin.Abstractions` 26.10.17.001
+- 通知插件 API：v2
+- 目标框架：.NET 10 (`net10.0`)
+- 最低宿主版本：26.09.14.002
 
-## 1. 下载、校验与构建
+本指导书与同版 SDK NuGet、项目模板、独立打包器和 `compatibility-matrix.json` 一起发布。不得混用不同 SDK 套件版本中的文件。
 
-从官网同时下载 SDK ZIP 与同名 `.sha256` 文件。在 PowerShell 中执行：
+## 1. 支持范围和安全边界
 
-```powershell
-$zip = 'PulseLink-Notification-SDK-26.10.15.003.zip'
-$expected = (Get-Content "$zip.sha256").Split(' ')[0]
-if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $expected) { throw 'SDK 文件校验失败' }
-Expand-Archive $zip -DestinationPath ./notification-sdk
-Set-Location ./notification-sdk/PulseLink-Notification-SDK
-dotnet --version
-dotnet build src/PulseLink.Plugin.Abstractions.csproj -c Release
-dotnet build examples/GenericWebhook.csproj -c Release
-dotnet run --project tests/GenericWebhook.Tests.csproj -c Release
-```
+通知插件在 PulseLink 宿主进程内运行，属于受信代码，不是隔离沙箱。插件只能使用 `PulseLink.Plugin.Abstractions` 暴露的消息和受限运行时能力，不得引用 PulseLink 模块、数据库、依赖注入容器或宿主内部类型。
 
-最后一个命令使用内存 HTTP 替身验证示例，无第三方测试框架和外部服务依赖，失败返回非零退出码。它覆盖配置、JSON 负载、幂等标识、HTTP 错误、取消和停止释放；不等于真实网络或宿主安装验收。
+SDK 支持：渠道声明、配置校验、投递、异步回执、结构化日志、健康状态、宿主管理的 HTTP 请求、插件级配置和受控 UI 操作。不提供任意文件、数据库、服务容器或宿主凭据访问。
 
-契约源码及 `contract-manifest.json` 是兼容性基线，不要重命名程序集、修改命名空间或更改契约版本。引用项目时设置 `Private="false" ExcludeAssets="runtime"`，使运行包使用宿主契约；独立测试程序需要自己引用契约项目。
+## 2. 安装套件并创建项目
 
-## 2. 从示例创建自己的插件
-
-复制 `examples/` 并保留对 SDK 的正确相对引用。修改以下对应项：
-
-| 内容 | 示例值 | 修改要求 |
-| --- | --- | --- |
-| 插件 ID | `example.generic-webhook` | 入口 `Id` 与 plugin.json 的 pluginId 一致且长期稳定 |
-| 插件版本 | `1.0.0` | 入口 Version、项目 Version、清单 version 一致，正式修复递增三段版本 |
-| 程序集 | `PulseLink.NotificationPlugins.GenericWebhook.dll` | csproj AssemblyName 与清单 entryAssembly 一致 |
-| 入口类型 | `PulseLink.NotificationPlugins.GenericWebhook.GenericWebhookPlugin` | public、实现接口、有 public 无参构造器，与 entryType 一致 |
-| 渠道 Key | `webhook` | 现有通道实例引用它，升级不可随意更改 |
-| 最低宿主 | `26.10.15.003` | 必须以实际安装及运行验证为依据 |
-
-示例 `plugin.json` 是未签名的打包输入；空 sha256 由发行工具计算。`marketplace.json` 是项目发行资料，不进入运行时 ZIP。发布前将所有 `example.invalid`、发行方、许可证、帮助、支持和隐私链接换成你实际维护的资料。示例不授予官方发行身份。
-
-## 3. 通道配置和发送
-
-`INotificationChannelPlugin.CreateChannels()` 返回渠道，`StopAsync()` 释放自身创建的客户端、连接、定时器和后台任务。示例客户端属于插件实例；停止后不能继续发送。
-
-`INotificationChannel` 声明显示名、默认 JSON、广播模式和联系人类型。示例为广播通道，不要求联系人；定向渠道应设置 IsBroadcast=false，并声明及读取匹配的 ContactTypes / Recipients，不要重新扩大宿主已经筛选的接收人范围。
-
-配置示例：
-
-```json
-{"url":"https://your-server.example/pulselink/webhook"}
-```
-
-ValidateConfigurationAsync 和 SendAsync 使用相同校验规则：JSON 对象中的 url 必须是绝对 HTTP(S) 地址，不允许 URL 内账号密码或片段。HTTP 仅用于受控网络调试，公网部署使用 HTTPS。取消令牌必须传递到底层 I/O；示例每次发送最多 10 秒，不跟随重定向，不读取或保存服务端响应正文。
-
-发送 POST application/json，包含 deliveryId、eventType、severity、subject、body 和 attributes；不发送完整 ConfigurationJson。请求头 `Idempotency-Key` 与负载 deliveryId 相同。接收端应持久化去重，同一 DeliveryId 重试时返回一致结果。
-
-HTTP 2xx 只返回 Accepted；4xx、429、5xx、重定向、网络异常会抛出，交由宿主记录失败和重试。示例不自行循环重试。取消/超时可能发生在远端已经受理之后，因此不能据此假定消息未发送。生产接入应按服务方契约增加鉴权，避免将令牌、联系人、消息正文和完整敏感 URL 写入日志。
-
-## 4. 后台服务、健康、日志与回执
-
-需要持续连接或异步回执时，插件额外实现 `INotificationPluginRuntimeAware.StartAsync(runtime, token)`。保存受限 runtime，由 StopAsync 取消并等待后台任务结束。
-
-| 可选接口或宿主能力 | 使用场景 |
-| --- | --- |
-| INotificationPluginConfigurationAware | 渠道配置变化时刷新连接或缓存 |
-| INotificationPluginHealthReporter | 标记持续上报健康的有状态插件，通过 runtime.ReportHealthAsync 上报；无状态渠道不应实现，频率须高于宿主过期频率 |
-| INotificationPluginOperations | 声明操作白名单并处理自定义管理 UI 请求 |
-| INotificationChannel.ContactTypes | 由渠道声明联系人类型；INotificationContactTypeCatalog 是宿主汇总读取接口，不是插件生命周期入口 |
-| runtime.ListChannelConfigurationsAsync | 读取当前插件的渠道实例配置 |
-| runtime.GetPluginConfigurationAsync / UpdatePluginConfigurationAsync | 保存独立于渠道实例的插件服务配置 |
-| runtime.SendHttpAsync | 使用宿主管理的受限 HTTP 通路 |
-| runtime.ReportHealthAsync / WriteLogAsync | 报告健康、记录脱敏运行日志 |
-| runtime.ReportReceiptAsync | 将服务方异步回执关联到原 DeliveryId |
-
-只在确认真实送达后报告 Delivered；无法确认时保留 Accepted。回执携带原 DeliveryId、提供方消息 ID 和状态；不要根据 HTTP 200 自动判定实际送达。配置整体替换操作会影响所有当前插件渠道实例，更新前保留仍需使用的实例。插件不能获取宿主数据库或内部模块服务。
-
-## 5. 构建、签名与交付
-
-`examples/bin/Release/net10.0/` 产生入口 DLL、依赖描述与未签名清单。运行包中不应包含 PulseLink.Plugin.Abstractions.dll、测试程序集、密钥或项目源码。第三方依赖必须随包交付并核对许可证及目标平台。
-
-SDK 只提供开发源码，不附带完整 ReleasePackager。取得授权发行工具和自己的 ECDSA 发布密钥后，在发行工具所在项目中使用以下命令形式（替换路径与密钥编号）：
+从同一个 SDK 发布目录执行：
 
 ```powershell
-dotnet run --project path/to/PulseLink.ReleasePackager -- plugin-pack `
-  --project path/to/GenericWebhook.csproj `
-  --private-key D:/plugin-signing/private.pem `
-  --signing-key-id your-publisher-key `
-  --allow-external-signing-key `
-  --output artifacts/your-plugins
+dotnet new install .\templates\PulseLink.NotificationPlugin.Template.<version>.nupkg
+dotnet new pulselink-notification -n Contoso.PulseLink.Notifications `
+  --pluginId contoso.notifications --displayName "Contoso Notifications" `
+  --providerId contoso --sdkVersion <version>
+dotnet restore .\Contoso.PulseLink.Notifications `
+  --source .\packages --source https://api.nuget.org/v3/index.json
+dotnet test .\Contoso.PulseLink.Notifications --configuration Release --no-restore
 ```
 
-工具校验入口身份、版本和商城资料，计算入口及文件摘要并签名，输出插件 ZIP 与同版本 release.json。不要手写假签名或将 SDK ZIP 当作安装包；修改 DLL 或包内容后必须重新打包签名。公钥、密钥编号及指纹交管理员核对，私钥始终由发行方保管且保持在包外。
+`pluginId` 一经发布不得更改。建议使用反向域名或组织前缀的小写稳定标识。项目、帮助和发行方 URL 必须替换模板占位值。
 
-私有交付不要求进入公共目录，但仍需完成管理员的插件信任和安装授权。公开发行另需发行方审核、公开文档、支持及隐私资料，按仓库 README 的 incoming/ 流程提交一对发布物。
+## 3. 公共契约和生命周期
 
-## 6. 宿主安装与验收
+入口实现 `INotificationChannelPlugin`，必须有公开无参构造函数；`Id`、`Version` 必须与 `plugin.json` 一致。`CreateChannels` 返回稳定的渠道集合，渠道 `Key` 在插件内唯一。
 
-1. 备份现有插件和配置，核对目标宿主、平台、发布公钥指纹与安装授权。
-2. 在“系统管理 → 插件信任”授权适当范围；在通知中心上传签名插件 ZIP 并启用。
-3. 创建 webhook 渠道实例，填入自建接收端地址。广播模式无需收件人联系人。
-4. 将渠道关联通知策略，产生真实测试事件，检查投递记录、远端记录及 DeliveryId 一致性。
-5. 测试成功、配置错误、HTTP 失败、超时、发送中取消、同 ID 重复投递、插件停用和宿主重启。
-6. 升级前验证旧配置及渠道 Key 兼容，升级后再验证发送；按宿主版本管理验证回滚与资源释放。
+短连接插件只需实现 `INotificationChannelPlugin`。拥有监听器、连接池或后台循环的插件再实现 `INotificationPluginRuntimeAware`；`StartAsync` 启动资源，`StopAsync` 必须在取消预算内停止接收、终止后台任务并释放套接字、计时器和句柄。停止流程应可重复调用，且不得遗留后台异常。
 
-签名与宿主装载成功、真实服务发送成功、异步回执确认应分别记录证据。验收表至少保存宿主版本、插件版本、配置脱敏样本、场景、预期/实际结果和投递 ID。
+配置变化需要热重载时实现 `INotificationPluginConfigurationAware`。无状态插件不要实现 `INotificationPluginHealthReporter`；长期运行插件实现该标记后，必须以高于宿主过期阈值的频率上报健康状态。
 
-## 7. 常见问题
+## 4. 配置和敏感信息
 
-| 现象 | 检查 |
-| --- | --- |
-| 找不到 .NET 10 / NETSDK1045 | 安装 .NET 10 SDK，检查 dotnet --list-sdks 及上级 global.json |
-| 编译通过但无法加载 | entryAssembly、entryType、无参构造器、宿主契约版本、依赖及平台 |
-| 身份或版本不一致 | 同步入口 Id/Version、csproj、plugin.json 后重新构建 |
-| 签名/摘要失败 | 是否修改了签名后的包、是否使用正确公钥与授权范围 |
-| 已受理但未送达 | 核对服务方结果与回执，不将 Accepted 当作 Delivered |
-| 更新后配置不兼容 | 保留旧渠道 Key 和配置迁移兼容性，查看宿主更新失败原因 |
-| 重复消息 | 检查接收端是否按 DeliveryId 持久化去重 |
+`ValidateConfigurationAsync` 必须拒绝无效 JSON、缺失必填项、非法范围以及不安全 URL。升级配置时保持旧字段兼容，新增字段提供安全默认值；必须删除或重命名字段时，在插件版本说明中提供迁移步骤。
 
-在线指导：https://autoluminis.github.io/pulselink-extension/developer.html
-发行流程：https://github.com/autoluminis/pulselink-extension/blob/release/README.md
+日志、健康摘要、异常响应和 UI 返回值不得包含密码、令牌、私钥、完整电话号码或原始敏感报文。插件调用 HTTP 服务时使用宿主的 `SendHttpAsync`，遵守 1–180 秒超时、1 MB 请求体及 64 KB 响应体限制。
+
+## 5. 投递、幂等和重试
+
+PulseLink 使用至少一次投递尝试语义，不承诺 exactly-once。外部服务已经受理但宿主尚未提交结果时，进程退出或租约丢失可能造成相同 `DeliveryId` 再次发送。
+
+插件必须：
+
+1. 把 `DeliveryId` 作为幂等键传递或持久化；
+2. 区分提供方受理 `Accepted` 与明确送达 `Delivered`；
+3. 对取消令牌和超时作出有界响应；
+4. 不在结果不确定时自行无限重试；
+5. 对部分收件人成功、迟到回执和进程重启建立测试。
+
+明确失败可抛出异常交由宿主 Outbox 重试。异步确认通过 `ReportReceiptAsync` 回报，且必须关联原 `DeliveryId`。
+
+## 6. 自定义 UI
+
+插件 UI 只能调用宿主提供的插件 UI 网关和 `INotificationPluginOperations` 白名单操作。资源使用相对路径，不依赖外部脚本；遵守宿主 CSP。操作名称稳定、不区分大小写，服务端仍需验证载荷、权限和当前状态。UI 不得读取宿主令牌或绕过审计接口。
+
+## 7. 必需测试
+
+发布前至少覆盖：
+
+- 入口无参构造、标识和版本与清单一致；
+- 渠道键唯一，默认配置可通过校验；
+- 非法 JSON、缺失字段、范围和 URL 校验；
+- 成功、拒绝、超时、取消及提供方错误；
+- 相同 `DeliveryId` 重复调用和重启恢复；
+- 部分成功和迟到回执；
+- 配置热更新并发；
+- `StopAsync` 有界、重复且无资源泄漏；
+- 日志和健康数据无敏感信息；
+- 包内清单、程序集身份、摘要和签名验证。
+
+## 8. 清单与版本
+
+`plugin.json` 使用 `manifestVersion: 2`、`apiVersion: 2`。版本为三个不超过 65534 的数字段，入口程序集版本、入口 `Version`、清单版本和发布元数据必须一致。`minimumHostVersion` 不能低于所用 API 首次支持的宿主版本；需要上限时在发布元数据中设置 `maximumHostVersionExclusive`。
+
+兼容更新递增 patch，新增向后兼容功能递增 minor，破坏插件行为或配置契约递增 major。SDK 的破坏性公共契约变化必须进入新的 `apiVersion`。
+
+## 9. 开发签名与验包
+
+开发、CI、正式发布使用不同密钥。私钥不得进入源码、模板、构建日志或插件 ZIP。开发密钥只用于本地/隔离环境，并通过显式测试信任配置授权；正式包必须使用已经登记并获插件范围授权的发行方密钥。
+
+```powershell
+pulselink-packager plugin-pack `
+  --project .\src\Contoso.PulseLink.Notifications\Contoso.PulseLink.Notifications.csproj `
+  --private-key C:\secure\contoso-release.pem `
+  --signing-key-id contoso-release-2026 `
+  --output .\artifacts\plugins `
+  --version 1.0.0
+
+pulselink-packager verify `
+  --package .\artifacts\plugins\contoso.notifications-1.0.0.plugin.zip `
+  --public-key C:\secure\contoso-release-public.pem
+```
+
+发布前离线保存包 SHA-256、清单、签名 KeyId、构建提交和测试结果。密钥轮换先授权新公钥，再用新密钥发布；确认客户端覆盖后撤销旧授权。撤销不能由插件包自身完成。
+
+## 10. 安装、升级与回滚测试
+
+在非生产宿主依次验证：全新安装、启用、创建渠道、测试投递、停用、同版本拒绝、升级、失败回滚、旧版回滚和卸载。升级前保留当前包和配置备份；Pending 投递未处理完成时不要替换整体通知配置。
+
+本地离线安装只证明该宿主环境的兼容性。商城发布还必须通过目录签名、哈希链、ZIP 分离签名、发行方授权以及宿主版本检查。
+
+## 11. 商城发布
+
+维护 `marketplace.json` 的真实发行方、开发者、说明、文档链接和发布说明。正式发布流程：
+
+1. 从干净提交恢复依赖并运行全部测试；
+2. 使用同版 SDK 套件打包器生成签名包；
+3. 对原始 ZIP 执行离线验签并记录 SHA-256；
+4. 提交发布 PR，不提交密钥或构建缓存；
+5. 等待发布仓库验证及目录重建；
+6. 在客户端刷新商城并进行安装、投递、升级与回滚验收。
+
+PR 创建或流水线调度成功不等于发布成功；最终以远端签名索引一致、客户端可安装及验收记录为准。
+
+SDK 套件本身的发布入口是 `.github/workflows/notification-plugin-sdk-release.yml`。先以 `plugin-sdk-v<productVersion>` tag 或手动运行执行验证；工作流完成模板、签名、验包、宿主安装/升级/回滚/卸载和 SHA-256 门禁后，才可在 `notification-plugin-sdk-release` 环境批准发布 GitHub Release 或 NuGet。正式发布不读取插件私钥，NuGet 发布需要环境密钥 `NUGET_API_KEY`。
+
+## 12. 发布检查表
+
+- [ ] SDK、模板、打包器和兼容矩阵版本一致
+- [ ] 清单、入口和程序集版本一致
+- [ ] 无主仓库 ProjectReference 或内部类型依赖
+- [ ] 单元、故障、生命周期和幂等测试通过
+- [ ] 私钥、令牌和现场数据扫描无发现
+- [ ] 开发密钥与正式密钥隔离
+- [ ] 签名包离线验签通过并记录 SHA-256
+- [ ] 非生产宿主安装、升级和回滚通过
+- [ ] 发布索引和客户端商城验证通过
+- [ ] 发布说明列出兼容范围、迁移步骤和已知限制

@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "product": "PulseLink",
   "channel": "stable",
-  "version": "26.10.26.002",
+  "version": "26.10.26.003",
   "minimumVersion": "1.0.0",
   "runtimeIdentifier": "win-x64",
-  "packagePath": "ota/stable/win-x64/PulseLink-26.10.26.002-win-x64.ota.zip",
-  "packageSize": 43885953,
-  "packageSha256": "EA5EE0CBBFA1A84D4DBEFE2E8651CB56E905ED570E6235DC0C9F81E08F526B33",
-  "publishedAt": "2026-10-26T05:24:27.1920413+00:00",
-  "releaseNotes": "\u81EA ota-stable-win-x64-26.10.26.001\uFF082026-10-26T02:16:20Z\uFF09\u4EE5\u6765\u7684\u66F4\u65B0\uFF1A\n\n### \u65B0\u589E\n\n- \u6570\u636E\u6E90 OPC UA \u72B6\u6001\u70B9\u5E76\u5B8C\u5584 NGINX \u6765\u6E90\u9A8C\u8BC1\u4E0E\u9ED8\u8BA4\u989D\u5EA6 (#186)\n\n### \u4FEE\u590D\n\n- \u8865\u9F50\u7F51\u5173\u5B57\u8282\u7C7B\u578B\u5E76\u4FEE\u590D\u70B9\u4F4D\u6821\u9A8C\u4E0E\u5730\u5740\u8EAB\u4EFD (#187)\n\n\u003C!-- pulselink-source:1182b54277e69b03f54ad812e03de116ff945d66 --\u003E",
+  "packagePath": "ota/stable/win-x64/PulseLink-26.10.26.003-win-x64.ota.zip",
+  "packageSize": 43886364,
+  "packageSha256": "DE7781F123D10159C62BBD4199732BBDF649193237E47A2B15E8D2F87745A399",
+  "publishedAt": "2026-10-26T08:34:24.7065827+00:00",
+  "releaseNotes": "\u81EA ota-stable-win-x64-26.10.26.002\uFF082026-10-26T05:29:19Z\uFF09\u4EE5\u6765\u7684\u66F4\u65B0\uFF1A\n\n### \u4FEE\u590D\n\n- \u8865\u9F50 Windows OTA \u542F\u52A8\u914D\u7F6E\u6587\u4EF6 (#188)\n\n### \u4F18\u5316\n\n- \u7EDF\u4E00\u524D\u7AEF\u9875\u9762\u6837\u5F0F\u5E76\u4FEE\u590D OTA CI \u6D4B\u8BD5\u5939\u5177 (#189)\n\n\u003C!-- pulselink-source:9a8464387ef1ea828713fe367af42f822fe4bee9 --\u003E",
   "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
   "signatureAlgorithm": "ECDSA-P256-SHA256",
-  "signature": "Z0Baxx2CQhT75iT520kxFBI1WmcdlG9wW\u002BEyaDWwNnisHUicV\u002BT7Ir1OTdtZFtxrvsAN1vGooiazay8Jbpj2Gg=="
+  "signature": "uVPXxygOXzvgjlpHjIiVooxNTAlNsn43JUgo017FtTW1c8AllhnjYaBmmQlunjuI/gUwz7GmbFY306swEYASZg=="
 }

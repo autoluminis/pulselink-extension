@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "product": "PulseLink",
   "channel": "stable",
-  "version": "26.10.26.003",
+  "version": "26.10.27.001",
   "minimumVersion": "1.0.0",
   "runtimeIdentifier": "win-x64",
-  "packagePath": "ota/stable/win-x64/PulseLink-26.10.26.003-win-x64.ota.zip",
-  "packageSize": 43886364,
-  "packageSha256": "DE7781F123D10159C62BBD4199732BBDF649193237E47A2B15E8D2F87745A399",
-  "publishedAt": "2026-10-26T08:34:24.7065827+00:00",
-  "releaseNotes": "\u81EA ota-stable-win-x64-26.10.26.002\uFF082026-10-26T05:29:19Z\uFF09\u4EE5\u6765\u7684\u66F4\u65B0\uFF1A\n\n### \u4FEE\u590D\n\n- \u8865\u9F50 Windows OTA \u542F\u52A8\u914D\u7F6E\u6587\u4EF6 (#188)\n\n### \u4F18\u5316\n\n- \u7EDF\u4E00\u524D\u7AEF\u9875\u9762\u6837\u5F0F\u5E76\u4FEE\u590D OTA CI \u6D4B\u8BD5\u5939\u5177 (#189)\n\n\u003C!-- pulselink-source:9a8464387ef1ea828713fe367af42f822fe4bee9 --\u003E",
+  "packagePath": "ota/stable/win-x64/PulseLink-26.10.27.001-win-x64.ota.zip",
+  "packageSize": 43919849,
+  "packageSha256": "2A3EA97128D9DB03A6182A2F94B48794F41CB075648D5D2934F90AF4ACEFFBF2",
+  "publishedAt": "2026-10-27T01:02:50.890688+00:00",
+  "releaseNotes": "\u81EA ota-stable-win-x64-26.10.26.003\uFF082026-10-26T08:38:22Z\uFF09\u4EE5\u6765\u7684\u66F4\u65B0\uFF1A\n\n### \u4FEE\u590D\n\n- \u4FEE\u590D OPC UA \u6D4B\u8BD5\u6CE8\u91CA\u89C4\u8303\u5BFC\u81F4\u7684 CI \u5931\u8D25\n- \u91CD\u6784 Windows OTA \u72EC\u7ACB\u66F4\u65B0\u5E76\u4FEE\u590D\u56DE\u6EDA\u4E0E\u5378\u8F7D\u6D41\u7A0B (#190)\n- \u5B8C\u5584\u5B89\u88C5\u8BCA\u65AD\u5E76\u4F18\u5316\u5185\u7F6E\u7F51\u5173\u5730\u5740\u4E0E\u8D44\u4EA7\u6620\u5C04 (#191)\n- \u56DE\u6536\u8FC7\u671F WMS \u548C WCS \u4F1A\u8BDD\u8D44\u6E90\n\n\u003C!-- pulselink-source:8b3e6b20aacf2c21b559186ea5c0f03887cf84d1 --\u003E",
   "keyId": "PULSELINK-RELEASE-20260909-114323-C4E0322DCA104E619C21B71FE5B0207C",
   "signatureAlgorithm": "ECDSA-P256-SHA256",
-  "signature": "uVPXxygOXzvgjlpHjIiVooxNTAlNsn43JUgo017FtTW1c8AllhnjYaBmmQlunjuI/gUwz7GmbFY306swEYASZg=="
+  "signature": "BixgGhaQoqXF0blc\u002BwfLpbD4xrfUU3pcxtW1imBLqhxVz9zfK3FK2mJtZ7eYb4crMElZd6TIyutJNTOeRwQlBA=="
 }
